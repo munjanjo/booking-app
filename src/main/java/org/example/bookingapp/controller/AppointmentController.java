@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,5 +44,15 @@ public class AppointmentController {
     public ResponseEntity<Void> cancelAppointment(@PathVariable UUID appointmentId) {
         appointmentService.cancelAppointment(appointmentId);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/salons/{salonId}/available-slots")
+    public ResponseEntity<List<String>> getAvailableSlots(
+            @PathVariable UUID salonId,
+            @RequestParam UUID serviceId,
+            @RequestParam LocalDate date) {
+
+        return ResponseEntity.ok(
+                appointmentService.getAvailableSlots(salonId, serviceId, date)
+        );
     }
 }

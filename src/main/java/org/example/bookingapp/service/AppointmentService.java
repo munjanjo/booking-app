@@ -7,7 +7,10 @@ import org.example.bookingapp.entity.*;
 import org.example.bookingapp.repository.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -121,6 +124,53 @@ public class AppointmentService {
                 .map(this::toResponse)
                 .toList();
     }
+
+    public List<String> getAvailableSlots(UUID salonId,UUID serviceId, LocalDate date){
+        Salon salon=salonRepository.findById(salonId).
+                orElseThrow(()->new RuntimeException("salon nije pronaden"));
+        Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(()->new RuntimeException("usluga nije pronadena"));
+        if(!salon.getId().equals(service.getSalon().getId())){
+            throw new RuntimeException("usluga ne pripada salonu");
+        }
+        int dayOfWeek=date.getDayOfWeek().getValue();
+        WorkingHours workingHours = workingHoursRepository
+
+                .findBySalonIdAndDayOfWeek(salonId, dayOfWeek)
+
+                .orElseThrow(() -> new RuntimeException("Salon nema definirano radno vrijeme za taj dan"));
+
+        if (!workingHours.isOpen()) {
+
+            throw new RuntimeException("Salon ne radi taj dan");
+
+        }
+        LocalDateTime dayStart = date.atStartOfDay();
+        LocalDateTime dayEnd = date.plusDays(1).atStartOfDay();
+        List<Appointment> appointments = appointmentRepository
+                .findBySalonAndStatusAndStartTimeBetween(
+                        salon,
+                        Appointment.Status.BOOKED,
+                        dayStart,
+                        dayEnd
+                );
+        List<String> availableSlots=new ArrayList<>();
+        LocalTime current=workingHours.getOpenTime();
+        LocalTime closeTime = workingHours.getCloseTime();
+        while(!current.plusMinutes(service.getDurationMinutes()).isAfter(closeTime)){
+            LocalDateTime slotStart = LocalDateTime.of(date,current);
+            LocalDateTime slotEnd = slotStart.plusMinutes(service.getDurationMinutes());
+            boolean overlaps= appointments.stream().anyMatch(appointment ->
+                    appointment.getStartTime().isAfter(slotEnd)
+                    && appointment.getEndTime().isBefore(slotStart));
+            if(!overlaps){
+                availableSlots.add(current.toString());
+            }
+            current=current.plusMinutes(30);
+        }
+        return availableSlots;
+    }
+
     public void cancelAppointment(UUID appointmentId){
         User currentUser = getCurrentUser();
         Appointment appointment=appointmentRepository.findById(appointmentId)
@@ -133,4 +183,5 @@ public class AppointmentService {
         appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);
     }
+
 }

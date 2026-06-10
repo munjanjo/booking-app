@@ -23,4 +23,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             LocalDateTime startTime
 
     );
+    List<Appointment> findBySalonAndStatusAndStartTimeBetween(
+            Salon salon,
+            Appointment.Status status,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 }
