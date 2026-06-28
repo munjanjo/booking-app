@@ -1,0 +1,953 @@
+/* ============ NAVBAR ============ */
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.navbar-logo::before {
+  content: "\f237";
+  font-family: "tabler-icons";
+  font-weight: 400;
+  -webkit-text-fill-color: #2563eb;
+  font-size: 22px;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: all 0.18s;
+}
+
+.navbar-links a:hover {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.navbar-links span {
+  margin-left: 10px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-strong);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ============ BUTTONS ============ */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  padding: 10px 18px;
+  transition: transform 0.12s, box-shadow 0.18s, background 0.18s, color 0.18s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.navbar-links button,
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  padding: 8px 16px;
+}
+
+.navbar-links button:hover,
+.btn-ghost:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary,
+.auth-card button[type="submit"],
+.empty-state button,
+.salon-card button,
+.salon-form button[type="submit"],
+.services-header button {
+  background: var(--grad);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover,
+.auth-card button[type="submit"]:hover,
+.empty-state button:hover,
+.salon-card button:hover,
+.salon-form button[type="submit"]:hover,
+.services-header button:hover {
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.services-header button {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+/* ============ PAGE LAYOUT ============ */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  animation: fadeUp 0.4s ease;
+}
+
+.page > h2 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin: 0 0 28px;
+}
+
+/* ============ AUTH ============ */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: pop 0.35s ease;
+}
+
+.auth-card h1 {
+  font-size: 27px;
+  margin-bottom: 6px;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  align-self: flex-start;
+}
+
+.auth-card label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.auth-card input,
+.auth-card select {
+  height: 44px;
+  padding: 0 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface-2);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.auth-card input:focus,
+.auth-card select:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.auth-card button[type="submit"] {
+  height: 46px;
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.auth-error {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.auth-switch {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 20px 0 0;
+}
+
+.auth-switch a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ============ SALON GRID (Home) ============ */
+.salon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 18px;
+}
+
+.salon-tile {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+  animation: fadeUp 0.4s ease both;
+}
+
+.salon-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--grad);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s;
+}
+
+.salon-tile:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: transparent;
+}
+
+.salon-tile:hover::after {
+  transform: scaleX(1);
+}
+
+.salon-tile-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--grad-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.salon-tile h3 {
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.salon-tile .salon-row {
+  margin: 4px 0 0;
+}
+
+/* ============ SALON CARD (MySalon) ============ */
+.salon-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  max-width: 540px;
+  overflow: hidden;
+  animation: pop 0.35s ease;
+}
+
+.salon-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--grad);
+}
+
+.salon-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.salon-card-header h3 {
+  font-size: 24px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--grad-soft);
+  color: var(--primary);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.salon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 14.5px;
+  margin: 11px 0;
+}
+
+.salon-row i {
+  color: var(--accent);
+  font-size: 19px;
+}
+
+.salon-desc {
+  margin: 18px 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.salon-card button {
+  margin-top: 22px;
+}
+
+/* ============ EMPTY STATE ============ */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: var(--surface);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius);
+  max-width: 540px;
+  animation: pop 0.35s ease;
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin: 0 0 22px;
+}
+
+/* ============ FORMS (salon + service) ============ */
+.salon-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 540px;
+  margin-top: 20px;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  animation: pop 0.3s ease;
+}
+
+.salon-form label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.salon-form input,
+.salon-form textarea {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface-2);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.salon-form input:focus,
+.salon-form textarea:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.salon-form button[type="submit"] {
+  align-self: flex-start;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ============ RESERVATIONS ============ */
+.reservation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.reservation-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s, box-shadow 0.18s;
+  animation: fadeUp 0.4s ease both;
+}
+
+.reservation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.reservation-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.reservation-info .salon-row {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.badge-booked {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.badge-cancelled {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.badge-completed {
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+/* ============ SERVICES ============ */
+.services-section {
+  margin-top: 36px;
+  max-width: 540px;
+}
+
+.services-section h3 {
+  font-size: 19px;
+  margin: 0;
+}
+
+.services-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.services-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.service-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s, box-shadow 0.16s;
+  animation: fadeUp 0.35s ease both;
+}
+
+.service-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.service-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.service-meta {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.service-meta i {
+  color: var(--accent);
+  font-size: 15px;
+  margin-right: 4px;
+}
+
+/* ============ WORKING HOURS ============ */
+.hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.hours-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hours-day {
+  font-weight: 600;
+  font-size: 14px;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.hours-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  width: 96px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.hours-row input[type="time"] {
+  padding: 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface-2);
+}
+
+.hours-row input[type="time"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hours-dash {
+  color: var(--text-soft);
+}
+
+.hours-row button {
+  margin-left: auto;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.hours-muted {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-style: italic;
+}
+.service-card {
+  cursor: pointer;
+}
+
+.service-card.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+/* ============ BOOKING (date + slots) ============ */
+.page input[type="date"] {
+  padding: 11px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface-2);
+  margin-bottom: 8px;
+}
+
+.page input[type="date"]:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+  max-width: 540px;
+}
+
+.slot {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.slot:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.slot.selected {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+/* ============ BOOKING PAGE ============ */
+.booking {
+  max-width: 680px;
+  padding-bottom: 120px;
+}
+
+.salon-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 28px;
+}
+
+.salon-hero-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--grad);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.salon-hero h2 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.salon-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.salon-hero-meta i {
+  color: var(--accent);
+  margin-right: 4px;
+}
+
+.booking-step {
+  margin-bottom: 28px;
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--grad);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-head h3 {
+  font-size: 17px;
+}
+
+.booking-summary {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: calc(100% - 48px);
+  max-width: 680px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 22px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.3s ease;
+}
+
+.booking-summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.booking-summary-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.booking-summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.booking-summary-meta i {
+  color: var(--accent);
+  margin-left: 8px;
+}
+
+.booking-summary-meta i:first-child {
+  margin-left: 0;
+}
+
+.booking-summary button {
+  flex-shrink: 0;
+}
+
+/* ============ DATEPICKER THEME ============ */
+.react-datepicker__input-container input {
+  width: 280px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.react-datepicker__input-container input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.react-datepicker {
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.react-datepicker__header {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: var(--text);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.react-datepicker__day {
+  border-radius: 8px;
+  color: var(--text);
+  transition: background 0.12s;
+}
+
+.react-datepicker__day:hover {
+  background: var(--primary-soft);
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: var(--primary);
+  color: #fff;
+}
+
+.react-datepicker__day--selected:hover {
+  background: var(--primary-hover);
+}
+
+.react-datepicker__day--disabled {
+  color: var(--text-soft);
+  opacity: 0.5;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: var(--text-muted);
+}
+
+/* ============ DANGER BUTTON ============ */
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--danger-text);
+}
+
+.btn-danger:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-text);
+}
+
+/* ============ MODAL ============ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 20, 38, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeUp 0.2s ease;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  animation: pop 0.25s ease;
+}
+
+.modal-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 16px;
+}
+
+.modal h3 {
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.modal p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
