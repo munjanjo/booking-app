@@ -117,7 +117,7 @@ public class AppointmentService {
         Salon salon=salonRepository.findById(salonId)
                 .orElseThrow(()->new RuntimeException("salon nije pronaden"));
         if(!salon.getOwner().getId().equals(owner.getId())){
-            new RuntimeException("nemate ovlasti za pregled rezervacija ovog salona");
+            throw new RuntimeException("nemate ovlasti za pregled rezervacija ovog salona");
         }
         return appointmentRepository.findBySalonAndStatus(salon, Appointment.Status.BOOKED)
                 .stream()
@@ -161,8 +161,8 @@ public class AppointmentService {
             LocalDateTime slotStart = LocalDateTime.of(date,current);
             LocalDateTime slotEnd = slotStart.plusMinutes(service.getDurationMinutes());
             boolean overlaps= appointments.stream().anyMatch(appointment ->
-                    appointment.getStartTime().isAfter(slotEnd)
-                    && appointment.getEndTime().isBefore(slotStart));
+                    appointment.getStartTime().isBefore(slotEnd)
+                    && appointment.getEndTime().isAfter(slotStart));
             if(!overlaps){
                 availableSlots.add(current.toString());
             }
@@ -178,7 +178,7 @@ public class AppointmentService {
         boolean isClient = currentUser.getId().equals(appointment.getClient().getId());
         boolean isOwner = currentUser.getId().equals(appointment.getSalon().getOwner().getId());
         if(!isOwner && !isClient){
-            new RuntimeException("Nemate dozvolu otakzati ovaj termin");
+            throw new RuntimeException("Nemate dozvolu otkazati ovaj termin");
         }
         appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);

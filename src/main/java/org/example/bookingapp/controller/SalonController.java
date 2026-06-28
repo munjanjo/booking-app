@@ -7,7 +7,6 @@ import org.example.bookingapp.dto.SalonRequest;
 import org.example.bookingapp.dto.SalonResponse;
 import org.example.bookingapp.service.SalonService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public class SalonController {
 
     private final SalonService salonService;
-
     @PostMapping
     @PreAuthorize(("hasRole('SALON_OWNER')"))
     public ResponseEntity<SalonResponse> createSalon(@Valid @RequestBody SalonRequest request){
@@ -34,6 +32,10 @@ public class SalonController {
     @GetMapping("/{id}")
     public ResponseEntity<SalonResponse> getSalonById(@PathVariable UUID id){
         return ResponseEntity.ok(salonService.getSalonById(id));
+    }
+    @GetMapping("/my")
+    public ResponseEntity<List<SalonResponse>> getSalonByOwner(){
+        return ResponseEntity.ok(salonService.getMySalons());
     }
     @PutMapping("/{id}")
     @PreAuthorize(("hasRole('SALON_OWNER')"))

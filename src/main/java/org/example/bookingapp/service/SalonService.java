@@ -40,7 +40,13 @@ public class SalonService {
                 .createdAt(salon.getCreatedAt())
                 .build();
     }
+    public List<SalonResponse> getMySalons(){
+        User owner = getCurrentUser();
+        return salonRepository.findByOwner(owner).stream()
+                .map(this::toResponse)
+                .toList();
 
+    }
 
     public SalonResponse createSalon(SalonRequest request){
         User owner = getCurrentUser();

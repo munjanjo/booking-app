@@ -1,7 +1,6 @@
 package org.example.bookingapp.entity;
 import jakarta.persistence.*;
 import lombok.*;
-import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
