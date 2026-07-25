@@ -11,7 +11,18 @@ export default function MySalon() {
     const [serviceForm,setServiceForm]=useState({name:"",description:"",durationMinutes:"",price:""});
     const [showServiceForm,setShowServiceForm]=useState(false);
     const [editing,setEditing]=useState(false);
+    const [editingService,setEditingService]=useState(null);
     const mySalon=salon[0];
+    const startEditService = (s)=>{
+        setServiceForm({
+            name: s.name,
+            description: s.description || "",
+            durationMinutes: s.durationMinutes,
+            price: s.price,
+            });
+        setEditingService(s);
+        setShowServiceForm(true);
+    }
     const handleChange =(e)=>{
         setForm({...form,[e.target.name]:e.target.value});
     };
@@ -84,6 +95,22 @@ export default function MySalon() {
             setError(err.response?.data?.error || "Greška pri uređivanju salona");
         }
     }
+    const handleServiceUpdate = async (e) => {
+        e.preventDefault();
+        setError("");
+        try {
+            const res = await client.put(
+                `/salons/${mySalon.id}/services/${editingService.id}`,
+                serviceForm
+            );
+            setServices(services.map((s) => (s.id === editingService.id ? res.data : s)));
+            setServiceForm({ name: "", description: "", durationMinutes: "", price: "" });
+            setShowServiceForm(false);
+            setEditingService(null);
+        } catch (err) {
+            setError(err.response?.data?.error || "Greška pri uređivanju usluge");
+        }
+    };
 
     return (
         <div>
@@ -164,7 +191,7 @@ export default function MySalon() {
                         </div>
 
                         {showServiceForm && (
-                            <form className="salon-form" onSubmit={handleServiceSubmit}>
+                            <form className="salon-form" onSubmit={editingService ? handleServiceUpdate : handleServiceSubmit}>
                                 <label>Naziv usluge</label>
                                 <input
                                     name="name"
@@ -208,7 +235,7 @@ export default function MySalon() {
                                     <button
                                         type="button"
                                         className="btn-ghost"
-                                        onClick={() => setShowServiceForm(false)}
+                                        onClick={() => { setShowServiceForm(false); setEditingService(null); }}
                                     >
                                         Odustani
                                     </button>
@@ -229,6 +256,7 @@ export default function MySalon() {
                                                 <span><i className="ti ti-cash"></i> {s.price} €</span>
                                             </div>
                                         </div>
+                                        <button className="btn-ghost" onClick={()=>startEditService(s)}>Izmjeni</button>
                                         <button className="btn-ghost" onClick={()=>handleDelete(mySalon.id,s.id)}>Obriši</button>
                                     </div>
                                 ))}

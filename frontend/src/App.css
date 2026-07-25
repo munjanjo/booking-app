@@ -1,71 +1,73 @@
-/* ============ NAVBAR ============ */
+/* ============================================================
+   NAVBAR
+   ============================================================ */
 .home-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: saturate(180%) blur(14px);
+  height: 66px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 40;
 }
 
 .navbar-logo {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-weight: 700;
-  font-size: 20px;
+  font-weight: 750;
+  font-size: 19px;
   letter-spacing: -0.04em;
   text-decoration: none;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text);
 }
 
 .navbar-logo::before {
   content: "\f237";
   font-family: "tabler-icons";
   font-weight: 400;
-  -webkit-text-fill-color: #2563eb;
-  font-size: 22px;
+  font-size: 21px;
+  color: var(--primary);
 }
 
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .navbar-links a {
   text-decoration: none;
   color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 550;
   padding: 8px 14px;
   border-radius: 999px;
-  transition: all 0.18s;
+  transition: color 0.16s var(--ease), background 0.16s var(--ease);
 }
 
 .navbar-links a:hover {
-  color: var(--primary);
-  background: var(--primary-soft);
+  color: var(--text);
+  background: var(--surface-hover);
 }
 
 .navbar-links span {
-  margin-left: 10px;
-  padding-left: 16px;
+  margin-left: 12px;
+  padding-left: 18px;
   border-left: 1px solid var(--border-strong);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--text);
 }
 
-/* ============ BUTTONS ============ */
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 button {
   font-family: inherit;
   font-size: 14px;
@@ -74,16 +76,24 @@ button {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   padding: 10px 18px;
-  transition: transform 0.12s, box-shadow 0.18s, background 0.18s, color 0.18s;
+  letter-spacing: -0.01em;
+  transition: transform 0.12s var(--ease-out), box-shadow 0.18s var(--ease-out),
+    background 0.16s var(--ease-out), border-color 0.16s var(--ease-out), color 0.16s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.965);
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .navbar-links button,
 .btn-ghost {
-  background: transparent;
+  background: var(--surface);
   border-color: var(--border-strong);
   color: var(--text-muted);
   padding: 8px 16px;
@@ -91,10 +101,9 @@ button:active {
 
 .navbar-links button:hover,
 .btn-ghost:hover {
-  background: var(--surface);
-  border-color: var(--primary);
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-hover);
+  border-color: var(--text-soft);
+  color: var(--text);
 }
 
 .btn-primary,
@@ -104,9 +113,12 @@ button:active {
 .salon-form button[type="submit"],
 .services-header button {
   background: var(--grad);
+  background-size: 140% 140%;
+  background-position: 0% 0%;
   color: #fff;
   border: none;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.25) inset, 0 6px 16px rgba(37, 84, 232, 0.28);
+  position: relative;
 }
 
 .btn-primary:hover,
@@ -115,71 +127,90 @@ button:active {
 .salon-card button:hover,
 .salon-form button[type="submit"]:hover,
 .services-header button:hover {
-  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.3) inset, 0 10px 26px rgba(37, 84, 232, 0.38);
   transform: translateY(-1px);
+  background-position: 100% 100%;
+}
+
+.btn-primary:active,
+.auth-card button[type="submit"]:active,
+.salon-form button[type="submit"]:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-danger {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--danger-text);
+}
+
+.btn-danger:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-text);
 }
 
 .services-header button {
   padding: 8px 16px;
-  font-size: 13px;
+  font-size: 12.5px;
 }
 
-/* ============ PAGE LAYOUT ============ */
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
 .page {
   max-width: 960px;
   margin: 0 auto;
-  padding: 40px 24px;
-  animation: fadeUp 0.4s ease;
+  padding: 44px 24px 80px;
+  animation: fadeUp 0.5s var(--ease-out);
 }
 
 .page > h2 {
-  font-size: 28px;
-  margin-bottom: 4px;
+  font-size: 27px;
+  margin-bottom: 5px;
 }
 
 .page-subtitle {
   color: var(--text-muted);
-  font-size: 15px;
-  margin: 0 0 28px;
+  font-size: 14.5px;
+  margin: 0 0 30px;
 }
 
-/* ============ AUTH ============ */
+/* ============================================================
+   AUTH
+   ============================================================ */
 .auth-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
 }
 
 .auth-card {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 400px;
+  max-width: 396px;
   padding: 40px 36px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: pop 0.35s ease;
+  animation: pop 0.4s var(--ease-out);
 }
 
 .auth-card h1 {
-  font-size: 27px;
+  font-size: 25px;
   margin-bottom: 6px;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  align-self: flex-start;
 }
 
 .auth-card label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
+  letter-spacing: -0.01em;
 }
 
 .auth-card input,
@@ -191,8 +222,18 @@ button:active {
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: inherit;
+  color: var(--text);
   background: var(--surface-2);
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background 0.15s var(--ease-out);
+}
+
+.auth-card input::placeholder {
+  color: var(--text-soft);
+}
+
+.auth-card input:hover,
+.auth-card select:hover {
+  border-color: var(--text-soft);
 }
 
 .auth-card input:focus,
@@ -200,43 +241,54 @@ button:active {
   outline: none;
   background: var(--surface);
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-soft);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
 .auth-card button[type="submit"] {
   height: 46px;
-  margin-top: 8px;
-  font-size: 15px;
+  margin-top: 6px;
+  font-size: 14.5px;
 }
 
 .auth-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: var(--danger-bg);
   color: var(--danger-text);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 550;
   padding: 11px 14px;
   border-radius: var(--radius-sm);
   margin-bottom: 16px;
+  animation: fadeUp 0.25s var(--ease-out);
 }
 
 .auth-switch {
   font-size: 13px;
   color: var(--text-muted);
   text-align: center;
-  margin: 20px 0 0;
+  margin: 22px 0 0;
 }
 
 .auth-switch a {
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+  transition: color 0.15s;
 }
 
-/* ============ SALON GRID (Home) ============ */
+.auth-switch a:hover {
+  color: var(--primary-hover);
+}
+
+/* ============================================================
+   SALON GRID (Home)
+   ============================================================ */
 .salon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+  gap: 16px;
 }
 
 .salon-tile {
@@ -245,75 +297,64 @@ button:active {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
   overflow: hidden;
-  animation: fadeUp 0.4s ease both;
-}
-
-.salon-tile::after {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: var(--grad);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.25s;
+  animation: fadeUp 0.45s var(--ease-out) both;
+  transition: transform 0.28s var(--ease-out), box-shadow 0.28s var(--ease-out), border-color 0.28s var(--ease-out);
 }
 
 .salon-tile:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: transparent;
 }
 
-.salon-tile:hover::after {
-  transform: scaleX(1);
+.salon-tile:active {
+  transform: translateY(-1px) scale(0.99);
 }
 
 .salon-tile-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   background: var(--grad-soft);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 23px;
   margin-bottom: 16px;
+  transition: background 0.28s var(--ease-out), color 0.28s var(--ease-out), transform 0.28s var(--ease-out);
+}
+
+.salon-tile:hover .salon-tile-icon {
+  background: var(--grad);
+  color: #fff;
+  transform: scale(1.06);
 }
 
 .salon-tile h3 {
-  font-size: 17px;
-  margin-bottom: 4px;
+  font-size: 16.5px;
+  margin-bottom: 5px;
 }
 
 .salon-tile .salon-row {
   margin: 4px 0 0;
 }
 
-/* ============ SALON CARD (MySalon) ============ */
+/* ============================================================
+   SALON CARD (MySalon)
+   ============================================================ */
 .salon-card {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 32px;
+  border-radius: var(--radius-lg);
+  padding: 30px 32px;
   box-shadow: var(--shadow-md);
   max-width: 540px;
-  overflow: hidden;
-  animation: pop 0.35s ease;
-}
-
-.salon-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 5px;
-  background: var(--grad);
+  animation: pop 0.4s var(--ease-out);
 }
 
 .salon-card-header {
@@ -324,15 +365,18 @@ button:active {
 }
 
 .salon-card-header h3 {
-  font-size: 24px;
+  font-size: 23px;
 }
 
 .badge {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: var(--grad-soft);
+  background: var(--primary-soft);
   color: var(--primary);
   padding: 6px 12px;
   border-radius: 999px;
@@ -343,21 +387,23 @@ button:active {
   align-items: center;
   gap: 10px;
   color: var(--text-muted);
-  font-size: 14.5px;
+  font-size: 14px;
   margin: 11px 0;
 }
 
 .salon-row i {
-  color: var(--accent);
-  font-size: 19px;
+  color: var(--text-soft);
+  font-size: 17px;
+  width: 17px;
+  text-align: center;
 }
 
 .salon-desc {
   margin: 18px 0;
   padding-top: 18px;
   border-top: 1px solid var(--border);
-  color: var(--text);
-  font-size: 14.5px;
+  color: var(--text-muted);
+  font-size: 14px;
   line-height: 1.65;
 }
 
@@ -365,42 +411,56 @@ button:active {
   margin-top: 22px;
 }
 
-/* ============ EMPTY STATE ============ */
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
 .empty-state {
   text-align: center;
-  padding: 60px 24px;
-  background: var(--surface);
+  padding: 64px 24px;
+  background: var(--surface-2);
   border: 1.5px dashed var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   max-width: 540px;
-  animation: pop 0.35s ease;
+  animation: pop 0.4s var(--ease-out);
 }
 
 .empty-state p {
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: 14.5px;
   margin: 0 0 22px;
 }
 
-/* ============ FORMS (salon + service) ============ */
+.services-empty {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  padding: 22px;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   FORMS (salon + service)
+   ============================================================ */
 .salon-form {
   display: flex;
   flex-direction: column;
   max-width: 540px;
-  margin-top: 20px;
-  padding: 32px;
+  margin-top: 22px;
+  padding: 30px 32px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  animation: pop 0.3s ease;
+  animation: pop 0.32s var(--ease-out);
 }
 
 .salon-form label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .salon-form input,
@@ -411,8 +471,15 @@ button:active {
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: inherit;
+  color: var(--text);
   background: var(--surface-2);
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background 0.15s var(--ease-out);
+  resize: vertical;
+}
+
+.salon-form input:hover,
+.salon-form textarea:hover {
+  border-color: var(--text-soft);
 }
 
 .salon-form input:focus,
@@ -420,7 +487,7 @@ button:active {
   outline: none;
   background: var(--surface);
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-soft);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
 .salon-form button[type="submit"] {
@@ -433,12 +500,14 @@ button:active {
   margin-top: 6px;
 }
 
-/* ============ RESERVATIONS ============ */
+/* ============================================================
+   RESERVATIONS
+   ============================================================ */
 .reservation-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 640px;
+  gap: 12px;
+  max-width: 660px;
 }
 
 .reservation-card {
@@ -450,28 +519,30 @@ button:active {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.18s, box-shadow 0.18s;
-  animation: fadeUp 0.4s ease both;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), border-color 0.22s var(--ease-out);
+  animation: fadeUp 0.4s var(--ease-out) both;
 }
 
 .reservation-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+  border-color: transparent;
 }
 
 .reservation-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15.5px;
+  font-weight: 650;
   margin-bottom: 10px;
+  letter-spacing: -0.01em;
 }
 
 .reservation-info .salon-row {
   margin: 5px 0;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .badge-booked {
@@ -485,18 +556,20 @@ button:active {
 }
 
 .badge-completed {
-  background: var(--bg);
+  background: var(--surface-hover);
   color: var(--text-muted);
 }
 
-/* ============ SERVICES ============ */
+/* ============================================================
+   SERVICES
+   ============================================================ */
 .services-section {
-  margin-top: 36px;
+  margin-top: 38px;
   max-width: 540px;
 }
 
 .services-section h3 {
-  font-size: 19px;
+  font-size: 18px;
   margin: 0;
 }
 
@@ -507,186 +580,68 @@ button:active {
   margin-bottom: 16px;
 }
 
-.services-empty {
-  color: var(--text-muted);
-  font-size: 14px;
-  padding: 20px;
-  text-align: center;
-  background: var(--surface);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-sm);
-}
-
 .service-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .service-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 16px 20px;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.16s, box-shadow 0.16s;
-  animation: fadeUp 0.35s ease both;
+  padding: 15px 18px;
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
 }
 
 .service-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .service-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 620;
   margin-bottom: 5px;
+  letter-spacing: -0.01em;
 }
 
 .service-meta {
   display: flex;
-  gap: 18px;
-  font-size: 13px;
+  gap: 16px;
+  font-size: 12.5px;
   color: var(--text-muted);
 }
 
 .service-meta i {
-  color: var(--accent);
-  font-size: 15px;
+  color: var(--text-soft);
+  font-size: 14px;
   margin-right: 4px;
 }
 
-/* ============ WORKING HOURS ============ */
-.hours-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 560px;
-}
-
-.hours-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 18px;
-  box-shadow: var(--shadow-sm);
-}
-
-.hours-day {
-  font-weight: 600;
-  font-size: 14px;
-  width: 110px;
-  flex-shrink: 0;
-}
-
-.hours-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-muted);
-  width: 96px;
-  flex-shrink: 0;
+/* clickable / selectable service card (booking flow) */
+.booking-step .service-card {
   cursor: pointer;
-}
-
-.hours-row input[type="time"] {
-  padding: 7px 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-family: inherit;
-  background: var(--surface-2);
-}
-
-.hours-row input[type="time"]:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.hours-dash {
-  color: var(--text-soft);
-}
-
-.hours-row button {
-  margin-left: auto;
-  padding: 7px 14px;
-  font-size: 13px;
-}
-.hours-muted {
-  font-size: 12px;
-  color: var(--text-soft);
-  font-style: italic;
-}
-.service-card {
-  cursor: pointer;
+  border-width: 1.5px;
 }
 
 .service-card.selected {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* ============ BOOKING (date + slots) ============ */
-.page input[type="date"] {
-  padding: 11px 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: inherit;
-  background: var(--surface-2);
-  margin-bottom: 8px;
-}
-
-.page input[type="date"]:focus {
-  outline: none;
-  background: var(--surface);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-soft);
-}
-
-.slot-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-  gap: 10px;
-  max-width: 540px;
-}
-
-.slot {
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  padding: 11px 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-  text-align: center;
-  transition: all 0.15s;
-}
-
-.slot:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.slot.selected {
-  background: var(--grad);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-}
-
-/* ============ BOOKING PAGE ============ */
+/* ============================================================
+   BOOKING PAGE (SalonDetails)
+   ============================================================ */
 .booking {
-  max-width: 680px;
-  padding-bottom: 120px;
+  max-width: 700px;
+  padding-bottom: 130px;
 }
 
 .salon-hero {
@@ -695,16 +650,16 @@ button:active {
   gap: 18px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px 28px;
+  border-radius: var(--radius-lg);
+  padding: 26px 30px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 28px;
+  margin-bottom: 30px;
 }
 
 .salon-hero-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
   background: var(--grad);
   color: #fff;
   display: flex;
@@ -712,28 +667,30 @@ button:active {
   justify-content: center;
   font-size: 28px;
   flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(37, 84, 232, 0.28);
 }
 
 .salon-hero h2 {
   font-size: 22px;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .salon-hero-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--text-muted);
 }
 
 .salon-hero-meta i {
-  color: var(--accent);
-  margin-right: 4px;
+  color: var(--text-soft);
+  margin-right: 5px;
 }
 
 .booking-step {
-  margin-bottom: 28px;
+  margin-bottom: 30px;
+  animation: fadeUp 0.4s var(--ease-out) both;
 }
 
 .step-head {
@@ -744,40 +701,44 @@ button:active {
 }
 
 .step-num {
-  width: 26px;
-  height: 26px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   background: var(--grad);
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(37, 84, 232, 0.3);
 }
 
 .step-head h3 {
-  font-size: 17px;
+  font-size: 16.5px;
 }
 
 .booking-summary {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: 22px;
   transform: translateX(-50%);
   width: calc(100% - 48px);
-  max-width: 680px;
+  max-width: 700px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 16px 22px;
   box-shadow: var(--shadow-lg);
-  animation: fadeUp 0.3s ease;
+  animation: pop 0.3s var(--ease-out);
+  z-index: 30;
 }
 
 .booking-summary-info {
@@ -789,20 +750,23 @@ button:active {
 
 .booking-summary-title {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .booking-summary-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-muted);
 }
 
 .booking-summary-meta i {
-  color: var(--accent);
-  margin-left: 8px;
+  color: var(--text-soft);
+  margin-left: 9px;
 }
 
 .booking-summary-meta i:first-child {
@@ -813,24 +777,40 @@ button:active {
   flex-shrink: 0;
 }
 
-/* ============ DATEPICKER THEME ============ */
+/* ============================================================
+   DATE / TIME PICKER
+   ============================================================ */
+.react-datepicker-wrapper {
+  display: inline-block;
+}
+
 .react-datepicker__input-container input {
-  width: 280px;
+  width: 288px;
+  max-width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: inherit;
+  color: var(--text);
   background: var(--surface-2);
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out), background 0.15s var(--ease-out);
+}
+
+.react-datepicker__input-container input:hover {
+  border-color: var(--text-soft);
 }
 
 .react-datepicker__input-container input:focus {
   outline: none;
   background: var(--surface);
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-soft);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.react-datepicker-popper {
+  z-index: 20;
 }
 
 .react-datepicker {
@@ -844,7 +824,7 @@ button:active {
 .react-datepicker__header {
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
-  padding-top: 14px;
+  padding-top: 15px;
 }
 
 .react-datepicker__current-month,
@@ -854,9 +834,15 @@ button:active {
   text-transform: capitalize;
 }
 
+.react-datepicker__day-name {
+  color: var(--text-soft);
+  font-size: 11.5px;
+}
+
 .react-datepicker__day {
   border-radius: 8px;
   color: var(--text);
+  font-weight: 500;
   transition: background 0.12s;
 }
 
@@ -866,62 +852,162 @@ button:active {
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background: var(--primary);
+  background: var(--grad);
   color: #fff;
+  font-weight: 650;
 }
 
 .react-datepicker__day--selected:hover {
-  background: var(--primary-hover);
+  background: var(--grad);
+  opacity: 0.9;
 }
 
 .react-datepicker__day--disabled {
   color: var(--text-soft);
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .react-datepicker__navigation-icon::before {
   border-color: var(--text-muted);
 }
 
-/* ============ DANGER BUTTON ============ */
-.btn-danger {
-  background: transparent;
+/* ============================================================
+   SLOTS
+   ============================================================ */
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 10px;
+  max-width: 560px;
+}
+
+.slot {
+  background: var(--surface);
   border: 1px solid var(--border-strong);
-  color: var(--danger-text);
+  border-radius: var(--radius-sm);
+  padding: 11px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  transition: all 0.15s var(--ease-out);
 }
 
-.btn-danger:hover {
-  background: var(--danger-bg);
-  border-color: var(--danger-text);
+.slot:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
-/* ============ MODAL ============ */
+.slot.selected {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 84, 232, 0.32);
+}
+
+/* ============================================================
+   WORKING HOURS
+   ============================================================ */
+.hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 580px;
+}
+
+.hours-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 18px;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out);
+}
+
+.hours-row:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.hours-day {
+  font-weight: 620;
+  font-size: 13.5px;
+  width: 106px;
+  flex-shrink: 0;
+}
+
+.hours-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+}
+
+.hours-row select:hover {
+  border-color: var(--text-soft);
+}
+
+.hours-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.hours-dash {
+  color: var(--text-soft);
+}
+
+.hours-muted {
+  font-size: 11.5px;
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+.hours-row button {
+  margin-left: auto;
+  padding: 7px 14px;
+  font-size: 12.5px;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(22, 20, 38, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(10, 12, 18, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  animation: fadeUp 0.2s ease;
+  animation: fadeIn 0.2s var(--ease-out);
+  padding: 20px;
 }
 
 .modal {
   background: var(--surface);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  padding: 32px;
+  padding: 34px;
   width: 100%;
   max-width: 380px;
   text-align: center;
-  animation: pop 0.25s ease;
+  animation: pop 0.28s var(--ease-out);
 }
 
 .modal-icon {
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: var(--danger-bg);
   color: var(--danger-text);
@@ -929,18 +1015,18 @@ button:active {
   align-items: center;
   justify-content: center;
   font-size: 26px;
-  margin: 0 auto 16px;
+  margin: 0 auto 18px;
 }
 
 .modal h3 {
   font-size: 19px;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
 
 .modal p {
   color: var(--text-muted);
-  font-size: 14px;
-  margin: 0 0 24px;
+  font-size: 13.5px;
+  margin: 0 0 26px;
 }
 
 .modal-actions {
@@ -950,4 +1036,118 @@ button:active {
 
 .modal-actions button {
   flex: 1;
+}
+
+/* ============================================================
+   RESPONSIVE (mobile / small tablets)
+   ============================================================ */
+@media (max-width: 720px) {
+  .home-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 18px;
+    row-gap: 8px;
+  }
+
+  .navbar-links {
+    flex-wrap: wrap;
+    width: 100%;
+    row-gap: 6px;
+  }
+
+  .navbar-links a {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .navbar-links span {
+    margin-left: auto;
+    padding-left: 12px;
+  }
+
+  .page {
+    padding: 28px 16px 90px;
+  }
+
+  .page > h2 {
+    font-size: 23px;
+  }
+
+  .auth-card {
+    padding: 32px 24px;
+  }
+
+  .salon-hero {
+    padding: 20px 22px;
+  }
+
+  .salon-hero-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    border-radius: 14px;
+  }
+
+  .salon-card,
+  .salon-form {
+    padding: 24px 22px;
+  }
+
+  .service-card,
+  .reservation-card {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .service-meta,
+  .salon-row {
+    flex-wrap: wrap;
+  }
+
+  .service-meta span,
+  .salon-row {
+    white-space: nowrap;
+  }
+
+  .hours-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .hours-day {
+    width: 100%;
+  }
+
+  .hours-row button {
+    margin-left: 0;
+  }
+
+  .hours-muted {
+    order: 10;
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .booking-summary {
+    flex-direction: column;
+    align-items: stretch;
+    bottom: 12px;
+    width: calc(100% - 24px);
+    padding: 16px 18px;
+  }
+
+  .booking-summary button {
+    width: 100%;
+  }
+
+  .react-datepicker__input-container input {
+    width: 100%;
+  }
 }
