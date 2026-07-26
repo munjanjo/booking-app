@@ -19,8 +19,10 @@ const toYMD = (d) => {
 export default function SalonDetails() {
     const { id } = useParams();
     const [services, setServices] = useState([]);
+    const [workers, setWorkers] = useState([]);
     const [salon, setSalon] = useState(null);
     const [selectedService, setSelectedService] = useState(null);
+    const [selectedWorker, setSelectedWorker] = useState(null);
     const [date, setDate] = useState("");
     const [slots, setSlots] = useState([]);
     const [selectedSlot, setSelectedSlot] = useState(null);
@@ -38,22 +40,31 @@ export default function SalonDetails() {
             .then((res) => setServices(res.data))
             .catch(() => setError("Greska pri dohvacanju usluga."));
     }, [id]);
+
     useEffect(() => {
-        if (selectedService && date) {
+        client.get(`/salons/${id}/workers`)
+            .then((res) => setWorkers(res.data))
+            .catch(() => setError("Greska pri dohvacanju radnika."));
+    }, [id]);
+
+    useEffect(() => {
+        if (selectedService && selectedWorker && date) {
             client.get(`/appointments/salons/${id}/available-slots`, {
-                params: { serviceId: selectedService.id, date },
+                params: { serviceId: selectedService.id, workerId: selectedWorker.id, date },
             })
                 .then((res) => setSlots(res.data))
                 .catch(() => setError("greska pri dohvacanju termina"));
         }
-    }, [date, selectedService]);
+    }, [date, selectedService, selectedWorker]);
+
     const submitBooking = async () => {
-        if (selectedService && date && selectedSlot) {
+        if (selectedService && selectedWorker && date && selectedSlot) {
             setError("");
             try {
                 await client.post("/appointments", {
                     salonId: id,
                     serviceId: selectedService.id,
+                    workerId: selectedWorker.id,
                     startTime: `${date}T${selectedSlot}`,
                 });
                 navigate("/moje-rezervacije");
@@ -62,6 +73,7 @@ export default function SalonDetails() {
             }
         }
     };
+
     return (
         <div>
             <Navbar />
@@ -116,6 +128,37 @@ export default function SalonDetails() {
                             <section className="booking-step">
                                 <div className="step-head">
                                     <span className="step-num">2</span>
+                                    <h3>Odaberi radnika</h3>
+                                </div>
+                                <div className="service-list">
+                                    {workers.map((w) => (
+                                        <div
+                                            key={w.id}
+                                            className={`service-card ${selectedWorker?.id === w.id ? "selected" : ""}`}
+                                            onClick={() => {
+                                                setSelectedWorker(selectedWorker?.id === w.id ? null : w);
+                                                setSelectedSlot(null);
+                                            }}
+                                        >
+                                            <div className="service-info">
+                                                <div className="service-name">
+                                                    <i className="ti ti-user" style={{ marginRight: "6px" }}></i>
+                                                    {w.name}
+                                                </div>
+                                            </div>
+                                            {selectedWorker?.id === w.id && (
+                                                <i className="ti ti-circle-check" style={{ fontSize: "22px", color: "var(--primary)" }}></i>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {selectedService && selectedWorker && (
+                            <section className="booking-step">
+                                <div className="step-head">
+                                    <span className="step-num">3</span>
                                     <h3>Odaberi datum</h3>
                                 </div>
                                 <DatePicker
@@ -132,10 +175,10 @@ export default function SalonDetails() {
                             </section>
                         )}
 
-                        {selectedService && date && (
+                        {selectedService && selectedWorker && date && (
                             <section className="booking-step">
                                 <div className="step-head">
-                                    <span className="step-num">3</span>
+                                    <span className="step-num">4</span>
                                     <h3>Odaberi termin</h3>
                                 </div>
                                 {slots.length > 0 ? (
@@ -161,7 +204,9 @@ export default function SalonDetails() {
                         {selectedSlot && (
                             <div className="booking-summary">
                                 <div className="booking-summary-info">
-                                    <span className="booking-summary-title">{selectedService.name}</span>
+                                    <span className="booking-summary-title">
+                                        {selectedService.name} · {selectedWorker.name}
+                                    </span>
                                     <span className="booking-summary-meta">
                                         <i className="ti ti-calendar"></i> {date}
                                         <i className="ti ti-clock"></i> {selectedSlot}

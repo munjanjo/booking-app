@@ -29,6 +29,10 @@ public class Appointment {
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "worker_id", nullable = false)
+    private Worker worker;
+
     @Column(nullable = false)
     private LocalDateTime startTime;
 

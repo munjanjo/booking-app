@@ -68,7 +68,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/moj-salon" element={<MySalon />} />
             <Route path="/moje-rezervacije" element={<MyReservations/>} />
-            <Route path="/radno-vrijeme" element={<WorkingHours/>}/>
+            <Route path="/radno-vrijeme/:workerId" element={<WorkingHours/>}/>
             <Route path="/salon/:id" element={<SalonDetails />} />
             <Route path="/rezervacije" element={<SalonReservations />} />
             <Route

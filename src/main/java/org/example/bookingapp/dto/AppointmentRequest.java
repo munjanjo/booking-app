@@ -14,6 +14,8 @@ public class AppointmentRequest {
     private UUID salonId;
     @NotNull(message = "Usluga je obavezna")
     private UUID serviceId;
+    @NotNull(message = "Radnik je obavezan")
+    private UUID workerId;
     @NotNull(message = "obavezno je vrijeme termina")
     @Future(message = "termin mora biti u buducnosti")
     private LocalDateTime startTime;

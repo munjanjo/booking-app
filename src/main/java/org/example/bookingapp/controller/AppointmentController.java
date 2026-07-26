@@ -49,10 +49,11 @@ public class AppointmentController {
     public ResponseEntity<List<String>> getAvailableSlots(
             @PathVariable UUID salonId,
             @RequestParam UUID serviceId,
+            @RequestParam UUID workerId,
             @RequestParam LocalDate date) {
 
         return ResponseEntity.ok(
-                appointmentService.getAvailableSlots(salonId, serviceId, date)
+                appointmentService.getAvailableSlots(salonId, serviceId, workerId, date)
         );
     }
 }

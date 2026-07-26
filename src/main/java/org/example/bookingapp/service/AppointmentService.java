@@ -22,6 +22,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final SalonRepository salonRepository;
     private final ServiceRepository serviceRepository;
+    private final WorkerRepository workerRepository;
     private final UserRepository userRepository;
     private final WorkingHoursRepository workingHoursRepository;
 
@@ -41,6 +42,8 @@ public class AppointmentService {
                 .salonName(appointment.getSalon().getName())
                 .serviceId(appointment.getService().getId())
                 .serviceName(appointment.getService().getName())
+                .workerId(appointment.getWorker().getId())
+                .workerName(appointment.getWorker().getName())
                 .startTime(appointment.getStartTime())
                 .endTime(appointment.getEndTime())
                 .status(appointment.getStatus().name())
@@ -60,35 +63,37 @@ public class AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Usluga nije pronađena"));
 
         if (!service.getSalon().getId().equals(salon.getId())) {
-
             throw new RuntimeException("Usluga ne pripada odabranom salonu");
-
         }
+
+        Worker worker = workerRepository.findById(request.getWorkerId())
+                .orElseThrow(() -> new RuntimeException("Radnik nije pronađen"));
+
+        if (!worker.getSalon().getId().equals(salon.getId())) {
+            throw new RuntimeException("Radnik ne pripada odabranom salonu");
+        }
+
         LocalDateTime startTime = request.getStartTime();
         LocalDateTime endTime = startTime.plusMinutes(service.getDurationMinutes());
         int dayOfWeek = startTime.getDayOfWeek().getValue();
-        WorkingHours workingHours = workingHoursRepository.findBySalonIdAndDayOfWeek(salon.getId(), dayOfWeek)
-                .orElseThrow(() -> new RuntimeException("Nema definirano radno vrijeme za taj dan"));
-        if (!workingHours.isOpen()) {
-
-            throw new RuntimeException("Salon ne radi taj dan");
-
+        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(worker.getId(), dayOfWeek);
+        if (dayShifts.isEmpty()) {
+            throw new RuntimeException("Nema definirano radno vrijeme za taj dan");
         }
-        if (startTime.toLocalTime().isBefore(workingHours.getOpenTime())
-
-                || endTime.toLocalTime().isAfter(workingHours.getCloseTime())) {
-
-            throw new RuntimeException("Termin nije unutar radnog vremena salona");
-
+        boolean withinShift = dayShifts.stream().anyMatch(wh ->
+                wh.isOpen()
+                        && !startTime.toLocalTime().isBefore(wh.getOpenTime())
+                        && !endTime.toLocalTime().isAfter(wh.getCloseTime())
+        );
+        if (!withinShift) {
+            throw new RuntimeException("Termin nije unutar radnog vremena radnika");
         }
         boolean overlaps = appointmentRepository
-
-                .existsBySalonAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
-                        salon,
+                .existsByWorkerAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                        worker,
                         Appointment.Status.BOOKED,
                         endTime,
                         startTime
-
                 );
 
         if (overlaps) {
@@ -98,6 +103,7 @@ public class AppointmentService {
         Appointment appointment = Appointment.builder().client(client)
                 .salon(salon)
                 .service(service)
+                .worker(worker)
                 .startTime(startTime)
                 .endTime(endTime)
                 .build();
@@ -125,7 +131,7 @@ public class AppointmentService {
                 .toList();
     }
 
-    public List<String> getAvailableSlots(UUID salonId,UUID serviceId, LocalDate date){
+    public List<String> getAvailableSlots(UUID salonId, UUID serviceId, UUID workerId, LocalDate date){
         Salon salon=salonRepository.findById(salonId).
                 orElseThrow(()->new RuntimeException("salon nije pronaden"));
         Service service = serviceRepository.findById(serviceId)
@@ -133,41 +139,45 @@ public class AppointmentService {
         if(!salon.getId().equals(service.getSalon().getId())){
             throw new RuntimeException("usluga ne pripada salonu");
         }
+        Worker worker = workerRepository.findById(workerId)
+                .orElseThrow(() -> new RuntimeException("radnik nije pronaden"));
+        if(!worker.getSalon().getId().equals(salon.getId())){
+            throw new RuntimeException("radnik ne pripada salonu");
+        }
         int dayOfWeek=date.getDayOfWeek().getValue();
-        WorkingHours workingHours = workingHoursRepository
-
-                .findBySalonIdAndDayOfWeek(salonId, dayOfWeek)
-
-                .orElseThrow(() -> new RuntimeException("Salon nema definirano radno vrijeme za taj dan"));
-
-        if (!workingHours.isOpen()) {
-
-            throw new RuntimeException("Salon ne radi taj dan");
-
+        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(workerId, dayOfWeek);
+        if (dayShifts.isEmpty()) {
+            throw new RuntimeException("Radnik nema definirano radno vrijeme za taj dan");
         }
         LocalDateTime dayStart = date.atStartOfDay();
         LocalDateTime dayEnd = date.plusDays(1).atStartOfDay();
         List<Appointment> appointments = appointmentRepository
-                .findBySalonAndStatusAndStartTimeBetween(
-                        salon,
+                .findByWorkerAndStatusAndStartTimeBetween(
+                        worker,
                         Appointment.Status.BOOKED,
                         dayStart,
                         dayEnd
                 );
         List<String> availableSlots=new ArrayList<>();
-        LocalTime current=workingHours.getOpenTime();
-        LocalTime closeTime = workingHours.getCloseTime();
-        while(!current.plusMinutes(service.getDurationMinutes()).isAfter(closeTime)){
-            LocalDateTime slotStart = LocalDateTime.of(date,current);
-            LocalDateTime slotEnd = slotStart.plusMinutes(service.getDurationMinutes());
-            boolean overlaps= appointments.stream().anyMatch(appointment ->
-                    appointment.getStartTime().isBefore(slotEnd)
-                    && appointment.getEndTime().isAfter(slotStart));
-            if(!overlaps){
-                availableSlots.add(current.toString());
+        for (WorkingHours workingHours : dayShifts) {
+            if (!workingHours.isOpen()) {
+                continue;
             }
-            current=current.plusMinutes(30);
+            LocalTime current = workingHours.getOpenTime();
+            LocalTime closeTime = workingHours.getCloseTime();
+            while (!current.plusMinutes(service.getDurationMinutes()).isAfter(closeTime)) {
+                LocalDateTime slotStart = LocalDateTime.of(date, current);
+                LocalDateTime slotEnd = slotStart.plusMinutes(service.getDurationMinutes());
+                boolean overlaps = appointments.stream().anyMatch(appointment ->
+                        appointment.getStartTime().isBefore(slotEnd)
+                        && appointment.getEndTime().isAfter(slotStart));
+                if (!overlaps) {
+                    availableSlots.add(current.toString());
+                }
+                current = current.plusMinutes(30);
+            }
         }
+        availableSlots.sort(String::compareTo);
         return availableSlots;
     }
 

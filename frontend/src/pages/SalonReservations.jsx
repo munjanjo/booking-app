@@ -66,6 +66,9 @@ export default function SalonReservations() {
                                         <i className="ti ti-user"></i> {a.clientName}
                                     </p>
                                     <p className="salon-row">
+                                        <i className="ti ti-briefcase"></i> {a.workerName}
+                                    </p>
+                                    <p className="salon-row">
                                         <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
                                     </p>
                                 </div>

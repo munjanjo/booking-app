@@ -21,6 +21,9 @@ public class AppointmentResponse {
     private UUID serviceId;
     private String serviceName;
 
+    private UUID workerId;
+    private String workerName;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import Navbar from "../components/Navbar";
 
 export default function MySalon() {
+    const navigate = useNavigate();
     const [salon, setSalon] = useState([]);
     const [error, setError] = useState("");
     const [form, setForm]=useState({name:"",description:"",phone:"",address:""});
@@ -12,6 +14,9 @@ export default function MySalon() {
     const [showServiceForm,setShowServiceForm]=useState(false);
     const [editing,setEditing]=useState(false);
     const [editingService,setEditingService]=useState(null);
+    const [workers,setWorkers]=useState([]);
+    const [workerForm,setWorkerForm]=useState({name:""});
+    const [showWorkerForm,setShowWorkerForm]=useState(false);
     const mySalon=salon[0];
     const startEditService = (s)=>{
         setServiceForm({
@@ -48,6 +53,36 @@ export default function MySalon() {
                 .catch(()=>setError("greska pri dohvacanju usluga."));
         }
     },[mySalon]);
+    useEffect(()=>{
+        if(mySalon){
+            client.get(`/salons/${mySalon.id}/workers`)
+                .then((res)=>setWorkers(res.data))
+                .catch(()=>setError("greska pri dohvacanju radnika."));
+        }
+    },[mySalon]);
+    const handleWorkerChange = (e) => {
+        setWorkerForm({ ...workerForm, [e.target.name]: e.target.value });
+    };
+    const handleWorkerSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        try {
+            const res = await client.post(`/salons/${mySalon.id}/workers`, workerForm);
+            setWorkers([...workers, res.data]);
+            setWorkerForm({ name: "" });
+            setShowWorkerForm(false);
+        } catch (err) {
+            setError(err.response?.data?.error || "Greška pri dodavanju radnika");
+        }
+    };
+    const handleWorkerDelete = async (workerId) => {
+        try {
+            await client.delete(`/salons/${mySalon.id}/workers/${workerId}`);
+            setWorkers(workers.filter((w) => w.id !== workerId));
+        } catch {
+            setError("greska pri brisanju radnika");
+        }
+    };
     const handleSubmit =async (e)=>{
         e.preventDefault();
         setError("");
@@ -258,6 +293,73 @@ export default function MySalon() {
                                         </div>
                                         <button className="btn-ghost" onClick={()=>startEditService(s)}>Izmjeni</button>
                                         <button className="btn-ghost" onClick={()=>handleDelete(mySalon.id,s.id)}>Obriši</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {salon.length > 0 && (
+                    <div className="services-section">
+                        <div className="services-header">
+                            <h3>Radnici</h3>
+                            {!showWorkerForm && (
+                                <button
+                                    className="btn-ghost"
+                                    onClick={() => setShowWorkerForm(true)}
+                                >
+                                    + Dodaj radnika
+                                </button>
+                            )}
+                        </div>
+
+                        {showWorkerForm && (
+                            <form className="salon-form" onSubmit={handleWorkerSubmit}>
+                                <label>Ime radnika</label>
+                                <input
+                                    name="name"
+                                    value={workerForm.name}
+                                    onChange={handleWorkerChange}
+                                    required
+                                />
+
+                                <div className="form-actions">
+                                    <button type="submit">Spremi</button>
+                                    <button
+                                        type="button"
+                                        className="btn-ghost"
+                                        onClick={() => setShowWorkerForm(false)}
+                                    >
+                                        Odustani
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {workers.length === 0 ? (
+                            <p className="services-empty">Još nema radnika.</p>
+                        ) : (
+                            <div className="service-list">
+                                {workers.map((w) => (
+                                    <div key={w.id} className="service-card">
+                                        <div className="service-info">
+                                            <div className="service-name">
+                                                <i className="ti ti-user" style={{ marginRight: "6px" }}></i>
+                                                {w.name}
+                                            </div>
+                                        </div>
+                                        <button
+                                            className="btn-ghost"
+                                            onClick={() =>
+                                                navigate(`/radno-vrijeme/${w.id}`, { state: { workerName: w.name } })
+                                            }
+                                        >
+                                            Radno vrijeme
+                                        </button>
+                                        <button className="btn-ghost" onClick={() => handleWorkerDelete(w.id)}>
+                                            Obriši
+                                        </button>
                                     </div>
                                 ))}
                             </div>

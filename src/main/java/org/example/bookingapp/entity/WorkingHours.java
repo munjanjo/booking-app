@@ -3,7 +3,6 @@ package org.example.bookingapp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
@@ -18,8 +17,8 @@ public class WorkingHours {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "salon_id",nullable = false)
-    private Salon salon;
+    @JoinColumn(name = "worker_id", nullable = false)
+    private Worker worker;
 
     @Column(nullable = false)
     private Integer dayOfWeek;

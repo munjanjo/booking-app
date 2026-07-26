@@ -58,6 +58,9 @@ export default function MojeRezervacije() {
                                         <i className="ti ti-building-store"></i> {a.salonName}
                                     </p>
                                     <p className="salon-row">
+                                        <i className="ti ti-user"></i> {a.workerName}
+                                    </p>
+                                    <p className="salon-row">
                                         <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
                                     </p>
                                 </div>

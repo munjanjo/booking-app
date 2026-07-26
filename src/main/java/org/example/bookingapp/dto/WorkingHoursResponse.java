@@ -10,7 +10,7 @@ import java.util.UUID;
 public class WorkingHoursResponse {
 
     private UUID id;
-    private UUID salonId;
+    private UUID workerId;
     private Integer dayOfWeek;
     private String dayName;
     private LocalTime openTime;
