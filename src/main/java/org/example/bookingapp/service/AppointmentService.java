@@ -3,6 +3,7 @@ package org.example.bookingapp.service;
 import lombok.RequiredArgsConstructor;
 import org.example.bookingapp.dto.AppointmentRequest;
 import org.example.bookingapp.dto.AppointmentResponse;
+import org.example.bookingapp.dto.RescheduleRequest;
 import org.example.bookingapp.entity.*;
 import org.example.bookingapp.repository.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -53,9 +54,6 @@ public class AppointmentService {
 
     public AppointmentResponse createAppointment(AppointmentRequest request) {
         User client = getCurrentUser();
-        if (client.getRole() != User.Role.CLIENT) {
-            throw new RuntimeException("samo klijenti mogu rezervirati termine");
-        }
         Salon salon = salonRepository.findById(request.getSalonId())
                 .orElseThrow(() -> new RuntimeException("Salon nije pronađen"));
 
@@ -192,6 +190,54 @@ public class AppointmentService {
         }
         appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);
+    }
+    public AppointmentResponse rescheduleAppointment(UUID appointmentId, RescheduleRequest request) {
+        User owner = getCurrentUser();
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Termin nije pronaden"));
+        if(!owner.getId().equals(appointment.getSalon().getOwner().getId())){
+            throw new RuntimeException("nemate dozvolu za ovu radnju!");
+        }
+
+        Worker worker = workerRepository.findById(request.getWorkerId())
+                .orElseThrow(() -> new RuntimeException("Radnik nije pronađen"));
+        if (!worker.getSalon().getId().equals(appointment.getSalon().getId())) {
+            throw new RuntimeException("Radnik ne pripada ovom salonu");
+        }
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = startTime.plusMinutes(appointment.getService().getDurationMinutes());
+        int dayOfWeek = startTime.getDayOfWeek().getValue();
+        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(worker.getId(), dayOfWeek);
+        if (dayShifts.isEmpty()) {
+            throw new RuntimeException("Nema definirano radno vrijeme za taj dan");
+        }
+        boolean withinShift = dayShifts.stream().anyMatch(wh ->
+                wh.isOpen()
+                        && !startTime.toLocalTime().isBefore(wh.getOpenTime())
+                        && !endTime.toLocalTime().isAfter(wh.getCloseTime())
+        );
+        if (!withinShift) {
+            throw new RuntimeException("Termin nije unutar radnog vremena radnika");
+        }
+        boolean overlaps = appointmentRepository
+                .existsByWorkerAndStatusAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
+                        worker,
+                        Appointment.Status.BOOKED,
+                        endTime,
+                        startTime,
+                        appointmentId
+                );
+
+        if (overlaps) {
+            throw new RuntimeException("Termin je već zauzet");
+        }
+        appointment.setWorker(worker);
+        appointment.setStartTime(startTime);
+        appointment.setEndTime(endTime);
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return toResponse(saved);
     }
 
 }

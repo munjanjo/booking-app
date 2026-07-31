@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.bookingapp.dto.AppointmentRequest;
 import org.example.bookingapp.dto.AppointmentResponse;
+import org.example.bookingapp.dto.RescheduleRequest;
 import org.example.bookingapp.service.AppointmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,6 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<AppointmentResponse> createAppointment(@Valid @RequestBody AppointmentRequest request) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -29,7 +29,6 @@ public class AppointmentController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<List<AppointmentResponse>> getMyAppointments() {
         return ResponseEntity.ok(appointmentService.getMyAppointments());
     }
@@ -55,5 +54,13 @@ public class AppointmentController {
         return ResponseEntity.ok(
                 appointmentService.getAvailableSlots(salonId, serviceId, workerId, date)
         );
+
+    }
+    @PutMapping("/{appointmentId}/reschedule")
+    @PreAuthorize("hasRole('SALON_OWNER')")
+    public ResponseEntity<AppointmentResponse> rescheduleAppointment(
+            @PathVariable UUID appointmentId,
+            @Valid @RequestBody RescheduleRequest request) {
+        return ResponseEntity.ok(appointmentService.rescheduleAppointment(appointmentId, request));
     }
 }

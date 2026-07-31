@@ -1412,3 +1412,215 @@ a.btn-ghost {
   padding: 9px 16px;
   font-size: 13px;
 }
+
+/* ============================================================
+   SALON CALENDAR (day view by worker)
+   ============================================================ */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.view-toggle span {
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s var(--ease-out), color 0.15s var(--ease-out);
+}
+
+.view-toggle span:hover {
+  color: var(--text);
+}
+
+.view-toggle span.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: var(--shadow-xs);
+}
+
+.calendar-grid {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 18px;
+  max-width: 100%;
+  background: var(--surface);
+}
+
+.calendar-corner {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.calendar-worker-header {
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text);
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-worker-header:last-child {
+  border-right: none;
+}
+
+.calendar-time-col {
+  position: relative;
+  border-right: 1px solid var(--border);
+}
+
+.calendar-time-label {
+  position: absolute;
+  right: 8px;
+  font-size: 10.5px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.calendar-grid {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.calendar-track {
+  position: relative;
+  border-right: 1px solid var(--border);
+  background-image: repeating-linear-gradient(
+    var(--border) 0 1px,
+    transparent 1px 92px
+  );
+}
+
+.calendar-track:last-child {
+  border-right: none;
+}
+
+.calendar-block {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--primary-soft);
+  border-left: 3px solid var(--primary);
+  border-radius: 10px;
+  padding: 9px 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.15s var(--ease-out), transform 0.15s var(--ease-out);
+}
+
+.calendar-block:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.calendar-block-title {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--primary-hover);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-block-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-block-meta i {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.calendar-block-duration {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.calendar-block-past {
+  background: var(--surface-2);
+  border-left-color: var(--border-strong);
+  opacity: 0.65;
+}
+
+.calendar-block-past .calendar-block-title,
+.calendar-block-past .calendar-block-meta {
+  color: var(--text-muted);
+}
+
+.calendar-block[draggable="true"] {
+  cursor: grab;
+}
+
+.calendar-block[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.calendar-block-dragging {
+  opacity: 0.4;
+}
+
+.calendar-track-dragover {
+  background-color: var(--primary-soft);
+}
+
+.calendar-closed-segment {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface-2) 0 6px,
+    transparent 6px 12px
+  );
+  pointer-events: none;
+}
+
+.calendar-drop-preview {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  border-radius: 10px;
+  border: 2px dashed;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.calendar-drop-preview.valid {
+  border-color: var(--success, #22c55e);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.calendar-drop-preview.invalid {
+  border-color: var(--danger, #ef4444);
+  background: rgba(239, 68, 68, 0.12);
+}
