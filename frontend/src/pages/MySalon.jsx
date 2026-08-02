@@ -3,6 +3,73 @@ import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 import Navbar from "../components/Navbar";
 
+// Date -> "YYYY-MM-DD" (lokalno, bez timezone pomaka)
+function toYMD(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+function startOfWeek(d) {
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day; // ponedjeljak kao prvi dan tjedna
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diff);
+    return monday;
+}
+
+const ANALYTICS_PRESETS = [
+    {
+        key: "today",
+        label: "Danas",
+        range: () => {
+            const today = toYMD(new Date());
+            return { from: today, to: today };
+        },
+    },
+    {
+        key: "week",
+        label: "Ovaj tjedan",
+        range: () => {
+            const monday = startOfWeek(new Date());
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            return { from: toYMD(monday), to: toYMD(sunday) };
+        },
+    },
+    {
+        key: "month",
+        label: "Ovaj mjesec",
+        range: () => {
+            const now = new Date();
+            const first = new Date(now.getFullYear(), now.getMonth(), 1);
+            const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            return { from: toYMD(first), to: toYMD(last) };
+        },
+    },
+    {
+        key: "lastMonth",
+        label: "Prošli mjesec",
+        range: () => {
+            const now = new Date();
+            const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const last = new Date(now.getFullYear(), now.getMonth(), 0);
+            return { from: toYMD(first), to: toYMD(last) };
+        },
+    },
+    {
+        key: "year",
+        label: "Ova godina",
+        range: () => {
+            const now = new Date();
+            const first = new Date(now.getFullYear(), 0, 1);
+            const last = new Date(now.getFullYear(), 11, 31);
+            return { from: toYMD(first), to: toYMD(last) };
+        },
+    },
+];
+
 export default function MySalon() {
     const navigate = useNavigate();
     const [salon, setSalon] = useState([]);
@@ -17,6 +84,19 @@ export default function MySalon() {
     const [workers,setWorkers]=useState([]);
     const [workerForm,setWorkerForm]=useState({name:""});
     const [showWorkerForm,setShowWorkerForm]=useState(false);
+    const defaultRange = ANALYTICS_PRESETS.find((p) => p.key === "month").range();
+    const [analyticsFrom, setAnalyticsFrom] = useState(defaultRange.from);
+    const [analyticsTo, setAnalyticsTo] = useState(defaultRange.to);
+    const [analyticsPreset, setAnalyticsPreset] = useState("month");
+    const [analytics, setAnalytics] = useState(null);
+    const [analyticsError, setAnalyticsError] = useState("");
+
+    const applyPreset = (preset) => {
+        const { from, to } = preset.range();
+        setAnalyticsFrom(from);
+        setAnalyticsTo(to);
+        setAnalyticsPreset(preset.key);
+    };
     const mySalon=salon[0];
     const startEditService = (s)=>{
         setServiceForm({
@@ -109,6 +189,20 @@ export default function MySalon() {
             .then((res) => setSalon(res.data))
             .catch(() => setError("Greška pri dohvaćanju salona"));
     }, []);
+
+    useEffect(() => {
+        if (!mySalon || !analyticsFrom || !analyticsTo) return;
+        setAnalyticsError("");
+        client
+            .get(`/appointments/salon/${mySalon.id}/analytics`, {
+                params: {
+                    startTime: `${analyticsFrom}T00:00:00`,
+                    endTime: `${analyticsTo}T23:59:59`,
+                },
+            })
+            .then((res) => setAnalytics(res.data))
+            .catch(() => setAnalyticsError("Greška pri dohvaćanju analitike"));
+    }, [mySalon, analyticsFrom, analyticsTo]);
     const startEdit = ()=>{
         setForm({
             name:mySalon.name,
@@ -157,21 +251,44 @@ export default function MySalon() {
                 {error && <p className="auth-error">{error}</p>}
 
                 {salon.length > 0 && !editing ? (
-                        <div className="salon-card">
-                            <div className="salon-card-header">
-                                <h3>{mySalon.name}</h3>
-                                <span className="badge">{mySalon.subscriptionPlan}</span>
+                        <div className="owner-hero">
+                            <div className="owner-hero-top">
+                                <div className="owner-hero-icon">
+                                    <i className="ti ti-building-store"></i>
+                                </div>
+                                <div className="owner-hero-info">
+                                    <div className="owner-hero-title-row">
+                                        <h2>{mySalon.name}</h2>
+                                        <span className="badge">{mySalon.subscriptionPlan}</span>
+                                    </div>
+                                    <div className="owner-hero-meta">
+                                        <span><i className="ti ti-map-pin"></i> {mySalon.address}</span>
+                                        <span><i className="ti ti-phone"></i> {mySalon.phone}</span>
+                                    </div>
+                                </div>
+                                <button className="btn-ghost" onClick={startEdit}>
+                                    <i className="ti ti-pencil"></i> Uredi salon
+                                </button>
                             </div>
-                            <p className="salon-row">
-                                <i className="ti ti-map-pin"></i> {mySalon.address}
-                            </p>
-                            <p className="salon-row">
-                                <i className="ti ti-phone"></i> {mySalon.phone}
-                            </p>
+
                             {mySalon.description && (
-                                <p className="salon-desc">{mySalon.description}</p>
+                                <p className="owner-hero-desc">{mySalon.description}</p>
                             )}
-                            <button onClick={startEdit}>Uredi salon</button>
+
+                            <div className="owner-stats">
+                                <div className="stat-chip">
+                                    <span className="stat-value">{workers.length}</span>
+                                    <span className="stat-label">
+                                        <i className="ti ti-users"></i> Radnika
+                                    </span>
+                                </div>
+                                <div className="stat-chip">
+                                    <span className="stat-value">{services.length}</span>
+                                    <span className="stat-label">
+                                        <i className="ti ti-list-details"></i> Usluga
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                 ) : (showForm||editing) ? (
                     <form className="salon-form" onSubmit={editing?handleUpdate:handleSubmit}>
@@ -211,6 +328,79 @@ export default function MySalon() {
                         <button onClick={() => setShowForm(true)}>Kreiraj salon</button>
                     </div>
                 )}
+                {salon.length > 0 && !editing && (
+                    <div className="services-section analytics-section">
+                        <div className="services-header">
+                            <h3>Analitika</h3>
+                        </div>
+
+                        <div className="analytics-toolbar">
+                            <div className="analytics-presets">
+                                {ANALYTICS_PRESETS.map((preset) => (
+                                    <button
+                                        key={preset.key}
+                                        type="button"
+                                        className={`analytics-preset ${analyticsPreset === preset.key ? "active" : ""}`}
+                                        onClick={() => applyPreset(preset)}
+                                    >
+                                        {preset.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="analytics-range">
+                                <input
+                                    type="date"
+                                    value={analyticsFrom}
+                                    max={analyticsTo}
+                                    onChange={(e) => {
+                                        setAnalyticsFrom(e.target.value);
+                                        setAnalyticsPreset(null);
+                                    }}
+                                />
+                                <span>–</span>
+                                <input
+                                    type="date"
+                                    value={analyticsTo}
+                                    min={analyticsFrom}
+                                    onChange={(e) => {
+                                        setAnalyticsTo(e.target.value);
+                                        setAnalyticsPreset(null);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {analyticsError && <p className="auth-error">{analyticsError}</p>}
+
+                        <div className="analytics-grid">
+                            <div className="analytics-card">
+                                <span className="analytics-card-value">
+                                    {analytics ? analytics.total : "–"}
+                                </span>
+                                <span className="analytics-card-label">
+                                    <i className="ti ti-calendar-stats"></i> Ukupno rezervacija
+                                </span>
+                            </div>
+                            <div className="analytics-card analytics-card-success">
+                                <span className="analytics-card-value">
+                                    {analytics ? analytics.totalBooked : "–"}
+                                </span>
+                                <span className="analytics-card-label">
+                                    <i className="ti ti-circle-check"></i> Aktivnih
+                                </span>
+                            </div>
+                            <div className="analytics-card analytics-card-danger">
+                                <span className="analytics-card-value">
+                                    {analytics ? analytics.totalCancelled : "–"}
+                                </span>
+                                <span className="analytics-card-label">
+                                    <i className="ti ti-circle-x"></i> Otkazanih
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {salon.length > 0 && (
                     <div className="services-section">
                         <div className="services-header">
@@ -281,18 +471,27 @@ export default function MySalon() {
                         {services.length === 0 ? (
                             <p className="services-empty">Još nema usluga.</p>
                         ) : (
-                            <div className="service-list">
+                            <div className="manage-grid">
                                 {services.map((s) => (
-                                    <div key={s.id} className="service-card">
-                                        <div className="service-info">
-                                            <div className="service-name">{s.name}</div>
-                                            <div className="service-meta">
+                                    <div key={s.id} className="manage-card">
+                                        <div className="manage-card-icon">
+                                            <i className="ti ti-scissors"></i>
+                                        </div>
+                                        <div className="manage-card-body">
+                                            <div className="manage-card-name">{s.name}</div>
+                                            <div className="manage-card-meta">
                                                 <span><i className="ti ti-clock"></i> {s.durationMinutes} min</span>
                                                 <span><i className="ti ti-cash"></i> {s.price} €</span>
                                             </div>
                                         </div>
-                                        <button className="btn-ghost" onClick={()=>startEditService(s)}>Izmjeni</button>
-                                        <button className="btn-ghost" onClick={()=>handleDelete(mySalon.id,s.id)}>Obriši</button>
+                                        <div className="manage-card-actions">
+                                            <button className="btn-ghost" onClick={()=>startEditService(s)}>
+                                                <i className="ti ti-pencil"></i>
+                                            </button>
+                                            <button className="btn-ghost" onClick={()=>handleDelete(mySalon.id,s.id)}>
+                                                <i className="ti ti-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -340,26 +539,28 @@ export default function MySalon() {
                         {workers.length === 0 ? (
                             <p className="services-empty">Još nema radnika.</p>
                         ) : (
-                            <div className="service-list">
+                            <div className="manage-grid">
                                 {workers.map((w) => (
-                                    <div key={w.id} className="service-card">
-                                        <div className="service-info">
-                                            <div className="service-name">
-                                                <i className="ti ti-user" style={{ marginRight: "6px" }}></i>
-                                                {w.name}
-                                            </div>
+                                    <div key={w.id} className="manage-card">
+                                        <div className="manage-card-icon">
+                                            <i className="ti ti-user"></i>
                                         </div>
-                                        <button
-                                            className="btn-ghost"
-                                            onClick={() =>
-                                                navigate(`/radno-vrijeme/${w.id}`, { state: { workerName: w.name } })
-                                            }
-                                        >
-                                            Radno vrijeme
-                                        </button>
-                                        <button className="btn-ghost" onClick={() => handleWorkerDelete(w.id)}>
-                                            Obriši
-                                        </button>
+                                        <div className="manage-card-body">
+                                            <div className="manage-card-name">{w.name}</div>
+                                        </div>
+                                        <div className="manage-card-actions">
+                                            <button
+                                                className="btn-ghost"
+                                                onClick={() =>
+                                                    navigate(`/radno-vrijeme/${w.id}`, { state: { workerName: w.name } })
+                                                }
+                                            >
+                                                <i className="ti ti-clock-hour-4"></i> Radno vrijeme
+                                            </button>
+                                            <button className="btn-ghost" onClick={() => handleWorkerDelete(w.id)}>
+                                                <i className="ti ti-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

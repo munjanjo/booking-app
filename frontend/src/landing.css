@@ -1,0 +1,31 @@
+/* Tailwind bez preflight resetа — koristi se samo na Landing stranici,
+   ne smije dirati globalne stilove iz App.css koje koristi ostatak appa. */
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+@theme {
+  --font-display: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  --font-sans: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --color-stone: #eae7df;
+  --color-stone-panel: #ffffff;
+  --color-ink: #20242a;
+  --color-ink-soft: #565b62;
+  --color-line: #d8d4c9;
+  --color-sea: #1d5c8a;
+  --color-sea-deep: #0b2440;
+  --color-sea-deeper: #071829;
+  --color-smilje: #e8a33d;
+  --color-maslina: #5c6e4f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

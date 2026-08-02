@@ -23,7 +23,7 @@ export default function Navbar() {
     return (
         <header className="home-header">
             <NavLink to="/" className="navbar-logo">
-                Munja
+                Apunta
             </NavLink>
 
             <nav className="navbar-links">
@@ -45,6 +45,12 @@ export default function Navbar() {
                         </NavLink>
                         <NavLink to="/rezervacije" className={linkClass}>
                             <i className="ti ti-calendar-check"></i> Rezervacije
+                        </NavLink>
+                        <NavLink to="/" end className={linkClass}>
+                            <i className="ti ti-search"></i> Saloni
+                        </NavLink>
+                        <NavLink to="/moje-rezervacije" className={linkClass}>
+                            <i className="ti ti-calendar-user"></i> Moje rezervacije
                         </NavLink>
                     </>
                 )}

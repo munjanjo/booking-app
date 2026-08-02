@@ -10,6 +10,7 @@ import MyReservations from "./pages/MyReservations.jsx"
 import WorkingHours from "./pages/WorkingHours.jsx";
 import SalonDetails from "./pages/SalonDetails.jsx";
 import SalonReservations from "./pages/SalonReservations.jsx";
+import Landing from "./pages/Landing.jsx";
 
 function Home() {
     const [salons, setSalons] = useState([]);
@@ -61,6 +62,11 @@ function PrivateRoute({ children }) {
     return token ? children : <Navigate to="/login" />;
 }
 
+function RootRoute() {
+    const token = localStorage.getItem("token");
+    return token ? <Home /> : <Landing />;
+}
+
 function App() {
     return (
         <Routes>
@@ -71,14 +77,7 @@ function App() {
             <Route path="/radno-vrijeme/:workerId" element={<WorkingHours/>}/>
             <Route path="/salon/:id" element={<SalonDetails />} />
             <Route path="/rezervacije" element={<SalonReservations />} />
-            <Route
-                path="/"
-                element={
-                    <PrivateRoute>
-                        <Home />
-                    </PrivateRoute>
-                }
-            />
+            <Route path="/" element={<RootRoute />} />
         </Routes>
     );
 }
