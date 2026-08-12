@@ -18,4 +18,8 @@ public class SalonRequest {
 
     @NotBlank(message = "Telefon je obavezan")
     private String phone;
+
+    private Integer maxAdvanceBookingDays;
+
+    private Integer minNoticeHours;
 }

@@ -14,6 +14,7 @@ public class AppointmentResponse {
 
     private UUID clientId;
     private String clientName;
+    private String clientPhone;
 
     private UUID salonId;
     private String salonName;

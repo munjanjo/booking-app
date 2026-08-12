@@ -2,9 +2,7 @@ package org.example.bookingapp.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.bookingapp.dto.AppointmentRequest;
-import org.example.bookingapp.dto.AppointmentResponse;
-import org.example.bookingapp.dto.RescheduleRequest;
+import org.example.bookingapp.dto.*;
 import org.example.bookingapp.service.AppointmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +25,20 @@ public class AppointmentController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(appointmentService.createAppointment(request));
+    }
+
+    @GetMapping("/clients/search")
+    @PreAuthorize("hasRole('SALON_OWNER')")
+    public ResponseEntity<List<UserSearchResponse>> searchClients(@RequestParam String q) {
+        return ResponseEntity.ok(appointmentService.searchClients(q));
+    }
+
+    @PostMapping("/manual")
+    @PreAuthorize("hasRole('SALON_OWNER')")
+    public ResponseEntity<AppointmentResponse> createManualAppointment(@Valid @RequestBody ManualAppointmentRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(appointmentService.createManualAppointment(request));
     }
 
     @GetMapping("/my")
@@ -62,5 +75,20 @@ public class AppointmentController {
             @PathVariable UUID appointmentId,
             @Valid @RequestBody RescheduleRequest request) {
         return ResponseEntity.ok(appointmentService.rescheduleAppointment(appointmentId, request));
+    }
+    @GetMapping("/salon/{salonId}/analytics")
+    @PreAuthorize("hasRole('SALON_OWNER')")
+    public ResponseEntity<AnalyticsSummaryResponse> getAnalytics(@PathVariable UUID salonId, @RequestParam LocalDateTime startTime,
+                                                                 @RequestParam LocalDateTime endTime){
+        return ResponseEntity.ok(appointmentService.getAnalyticsSummary(salonId, startTime, endTime));
+    }
+
+    @GetMapping("/salon/{salonId}/analytics/services")
+    @PreAuthorize("hasRole('SALON_OWNER')")
+    public ResponseEntity<List<ServiceAnalyticsResponse>> getServiceAnalytics(
+            @PathVariable UUID salonId,
+            @RequestParam LocalDateTime startTime,
+            @RequestParam LocalDateTime endTime) {
+        return ResponseEntity.ok(appointmentService.getServiceBreakdown(salonId, startTime, endTime));
     }
 }

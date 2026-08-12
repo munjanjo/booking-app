@@ -5,6 +5,7 @@ import org.example.bookingapp.dto.SalonRequest;
 import org.example.bookingapp.dto.SalonResponse;
 import org.example.bookingapp.entity.Salon;
 import org.example.bookingapp.entity.User;
+import org.example.bookingapp.repository.SalonImageRepository;
 import org.example.bookingapp.repository.SalonRepository;
 import org.example.bookingapp.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class SalonService {
     private final SalonRepository salonRepository;
     private final UserRepository userRepository;
+    private final SalonImageRepository salonImageRepository;
 
     private User getCurrentUser(){
         String email = SecurityContextHolder.getContext()
@@ -36,6 +38,11 @@ public class SalonService {
                 .phone(salon.getPhone())
                 .subscriptionPlan(salon.getSubscriptionPlan().name())
                 .subscriptionExpires(salon.getSubscriptionExpires())
+                .maxAdvanceBookingDays(salon.getMaxAdvanceBookingDays())
+                .minNoticeHours(salon.getMinNoticeHours())
+                .coverImageUrl(salonImageRepository.findFirstBySalonIdOrderBySortOrderAsc(salon.getId())
+                        .map(img -> img.getUrl())
+                        .orElse(null))
                 .isActive(salon.isActive())
                 .createdAt(salon.getCreatedAt())
                 .build();
@@ -57,6 +64,8 @@ public class SalonService {
                 .description(request.getDescription())
                 .address(request.getAddress())
                 .phone(request.getPhone())
+                .maxAdvanceBookingDays(request.getMaxAdvanceBookingDays())
+                .minNoticeHours(request.getMinNoticeHours())
                 .build();
         Salon saved = salonRepository.save(salon);
         return toResponse(saved);
@@ -83,6 +92,8 @@ public class SalonService {
         salon.setAddress(req.getAddress());
         salon.setDescription(req.getDescription());
         salon.setPhone(req.getPhone());
+        salon.setMaxAdvanceBookingDays(req.getMaxAdvanceBookingDays());
+        salon.setMinNoticeHours(req.getMinNoticeHours());
         Salon updated= salonRepository.save(salon);
         return toResponse(updated);
     }

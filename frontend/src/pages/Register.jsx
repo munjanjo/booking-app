@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import client from "../api/client";
 
 function Register() {
     const [form, setForm] = useState({
-        name: "",
+        firstName: "",
+        lastName: "",
         email: "",
         password: "",
+        confirmPassword: "",
         phone: "",
         role: "CLIENT",
     });
     const [error, setError] = useState("");
-    const navigate = useNavigate();
+    const [submitted, setSubmitted] = useState(false);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -20,26 +22,61 @@ function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        if (form.password !== form.confirmPassword) {
+            setError("Lozinke se ne podudaraju");
+            return;
+        }
         try {
-            const res = await client.post("/auth/register", form);
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("name", res.data.name);
-            localStorage.setItem("role", res.data.role);
-            navigate("/");
+            await client.post("/auth/register", {
+                name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+                email: form.email,
+                password: form.password,
+                phone: form.phone,
+                role: form.role,
+            });
+            setSubmitted(true);
         } catch (err) {
             setError(err.response?.data?.message || "Registracija nije uspjela");
         }
     };
 
+    if (submitted) {
+        return (
+            <div className="auth-container">
+                <div className="auth-card">
+                    <div className="auth-logo">
+                        <img src="/logo-mark.png" alt="" />
+                        <span>punta<span className="auth-logo-dot">.</span></span>
+                    </div>
+                    <h1>Provjeri svoj email</h1>
+                    <p className="auth-hint">
+                        Poslali smo link za potvrdu na <strong>{form.email}</strong>. Klikni na njega da
+                        aktiviraš svoj Apunta račun.
+                    </p>
+                    <p className="auth-switch">
+                        Već potvrdio/la? <Link to="/login">Prijavi se</Link>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="auth-container">
             <form className="auth-card" onSubmit={handleSubmit}>
+                <div className="auth-logo">
+                    <img src="/logo-mark.png" alt="" />
+                    <span>punta<span className="auth-logo-dot">.</span></span>
+                </div>
                 <h1>Registracija</h1>
 
                 {error && <div className="auth-error">{error}</div>}
 
                 <label>Ime</label>
-                <input name="name" value={form.name} onChange={handleChange} required />
+                <input name="firstName" value={form.firstName} onChange={handleChange} required />
+
+                <label>Prezime</label>
+                <input name="lastName" value={form.lastName} onChange={handleChange} required />
 
                 <label>Email</label>
                 <input type="email" name="email" value={form.email} onChange={handleChange} required />
@@ -54,8 +91,18 @@ function Register() {
                     required
                 />
 
+                <label>Potvrdi lozinku</label>
+                <input
+                    type="password"
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    minLength={6}
+                    required
+                />
+
                 <label>Telefon</label>
-                <input name="phone" value={form.phone} onChange={handleChange} />
+                <input type="tel" name="phone" value={form.phone} onChange={handleChange} required />
 
                 <label>Tip računa</label>
                 <select name="role" value={form.role} onChange={handleChange}>

@@ -13,6 +13,11 @@ spring:
       hibernate:
         format_sql: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 server:
   port: 8080
 
@@ -20,4 +25,13 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration: 86400000
-
+  base-url: ${APP_BASE_URL}
+resend:
+  api-key: ${RESEND_API_KEY}
+  from: ${MAIL_FROM_ADDRESS}
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_S3_REGION}

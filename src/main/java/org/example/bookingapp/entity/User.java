@@ -17,7 +17,6 @@ public class User{
     private String name;
     @Column(nullable = false,unique = true)
     private String email;
-    @Column(nullable = false)
     private String passwordHash;
     private String phone;
     @Enumerated(EnumType.STRING)
@@ -25,6 +24,15 @@ public class User{
     private Role role;
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private boolean emailVerified;
+    private String verificationToken;
+    private LocalDateTime verificationTokenExpiry;
+
+    private String passwordResetToken;
+    private LocalDateTime passwordResetTokenExpiry;
+
     @PrePersist
     protected void onCreate(){
         this.createdAt = LocalDateTime.now();

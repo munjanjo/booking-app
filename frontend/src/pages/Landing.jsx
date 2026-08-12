@@ -53,16 +53,17 @@ const steps = [
 ];
 
 const slots = [
-    { time: "09:00", who: "Ivana K.", what: "Feniranje · Ana", tag: "Potvrđeno" },
-    { time: "10:30", who: "Marko P.", what: "Šišanje · Tomo", tag: "Potvrđeno" },
-    { time: "11:00", who: "Petra Vuk", what: "Farbanje · Ana", tag: "Novo", isNew: true },
-    { time: "14:00", who: "Doris B.", what: "Masaža · Lucija", tag: "Potvrđeno" },
+    { time: "09:00", client: "Ivana K.", service: "Feniranje", worker: "Ana", tag: "Potvrđeno" },
+    { time: "10:30", client: "Marko P.", service: "Šišanje", worker: "Tomo", tag: "Potvrđeno" },
+    { time: "11:00", client: "Petra Vuk", service: "Farbanje", worker: "Ana", tag: "Novo", isNew: true },
+    { time: "14:00", client: "Doris B.", service: "Masaža", worker: "Lucija", tag: "Potvrđeno" },
 ];
 
 function Logo({ className = "" }) {
     return (
-        <span className={`font-display text-xl font-bold tracking-wide ${className}`}>
-            apunta<span className="text-smilje">.</span>
+        <span className={`inline-flex items-center gap-1.5 font-display text-xl font-bold tracking-wide ${className}`}>
+            <img src="/logo-mark.png" alt="" className="h-6 w-auto" />
+            punta<span className="text-smilje">.</span>
         </span>
     );
 }
@@ -147,20 +148,33 @@ function Hero() {
                 <div className="rotate-[1.2deg] rounded-2xl bg-stone-panel p-6 text-ink shadow-2xl shadow-black/40">
                     <div className="mb-4 flex items-baseline justify-between border-b border-line pb-3.5">
                         <span className="font-display text-lg">Subota, 1. kolovoza</span>
-                        <span className="text-[12.5px] uppercase tracking-wide text-ink-soft">
-                            Salon Nera
+                        <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink-soft">
+                            <img src="/logo-mark.png" alt="" className="h-3.5 w-auto" />
+                            Apunta
                         </span>
                     </div>
                     <ul>
                         {slots.map((s) => (
                             <li
                                 key={s.time}
-                                className="grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-dashed border-line py-2.5 text-sm last:border-none"
+                                className="grid grid-cols-[52px_1fr_auto] items-center gap-3 border-b border-line py-2.5 text-sm last:border-none"
                             >
                                 <time className="text-[13px] tabular-nums text-ink-soft">{s.time}</time>
                                 <div>
-                                    <div className="font-semibold">{s.who}</div>
-                                    <div className="text-[12.5px] text-ink-soft">{s.what}</div>
+                                    <div className="inline-flex items-center gap-1.5 font-semibold">
+                                        <i className="ti ti-user text-ink-soft text-[13px]" aria-hidden="true"></i>
+                                        {s.client}
+                                    </div>
+                                    <div className="mt-0.5 flex items-center gap-3 text-[12.5px] text-ink-soft">
+                                        <span className="inline-flex items-center gap-1">
+                                            <i className="ti ti-scissors text-[12px]" aria-hidden="true"></i>
+                                            {s.service}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1">
+                                            <i className="ti ti-users text-[12px]" aria-hidden="true"></i>
+                                            {s.worker}
+                                        </span>
+                                    </div>
                                 </div>
                                 <span
                                     className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${

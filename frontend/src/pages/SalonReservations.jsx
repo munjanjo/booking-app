@@ -14,6 +14,14 @@ const PX_PER_MIN = HOUR_HEIGHT / 60;
 const TRACK_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 const SNAP_MIN = 30;
 
+// sva vremena u koracima od 30 min, uvijek 24h format
+const TIMES = [];
+for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+        TIMES.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+    }
+}
+
 function formatDate(isoString) {
     return new Date(isoString).toLocaleString("hr-HR", {
         day: "numeric", month: "numeric", year: "numeric",
@@ -64,6 +72,7 @@ export default function SalonReservations() {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [error, setError] = useState("");
     const [view, setView] = useState("calendar");
+    const [listTab, setListTab] = useState("upcoming");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [draggedAppointment, setDraggedAppointment] = useState(null);
     const [dragOverWorkerId, setDragOverWorkerId] = useState(null);
@@ -573,6 +582,12 @@ export default function SalonReservations() {
                                                                 <div className="calendar-block-meta">
                                                                     <i className="ti ti-user"></i>
                                                                     {a.clientName}
+                                                                    {a.clientPhone && !compact && (
+                                                                        <span className="calendar-block-phone">
+                                                                            <i className="ti ti-phone"></i>
+                                                                            {a.clientPhone}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </>
                                                         )}
@@ -590,35 +605,79 @@ export default function SalonReservations() {
                         <p>Još nema rezervacija.</p>
                     </div>
                 ) : (
-                    <div className="reservation-list">
-                        {appointments.map((a) => (
-                            <div key={a.id} className="reservation-card">
-                                <div className="reservation-info">
-                                    <div className="reservation-title">
-                                        {a.serviceName}
-                                        <span className={`badge badge-${a.status.toLowerCase()}`}>
-                                            {a.status}
-                                        </span>
-                                    </div>
-                                    <p className="salon-row">
-                                        <i className="ti ti-user"></i> {a.clientName}
-                                    </p>
-                                    <p className="salon-row">
-                                        <i className="ti ti-briefcase"></i> {a.workerName}
-                                    </p>
-                                    <p className="salon-row">
-                                        <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
-                                    </p>
+                    (() => {
+                        const now = new Date();
+                        const upcoming = appointments
+                            .filter((a) => new Date(a.startTime) >= now)
+                            .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+                        const past = appointments
+                            .filter((a) => new Date(a.startTime) < now)
+                            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+                        const shown = listTab === "upcoming" ? upcoming : past;
+
+                        return (
+                            <>
+                                <div className="reservation-tabs">
+                                    <button
+                                        type="button"
+                                        className={`reservation-tab ${listTab === "upcoming" ? "active" : ""}`}
+                                        onClick={() => setListTab("upcoming")}
+                                    >
+                                        Nadolazeće <span className="reservation-tab-count">{upcoming.length}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`reservation-tab ${listTab === "past" ? "active" : ""}`}
+                                        onClick={() => setListTab("past")}
+                                    >
+                                        Prošle <span className="reservation-tab-count">{past.length}</span>
+                                    </button>
                                 </div>
-                                <button
-                                    className="btn-danger"
-                                    onClick={() => setConfirmId(a.id)}
-                                >
-                                    Otkaži
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+
+                                {shown.length === 0 ? (
+                                    <div className="empty-state">
+                                        <p>
+                                            {listTab === "upcoming"
+                                                ? "Nema nadolazećih rezervacija."
+                                                : "Još nema prošlih rezervacija."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="reservation-list">
+                                        {shown.map((a) => (
+                                            <div key={a.id} className="reservation-card">
+                                                <div className="reservation-info">
+                                                    <div className="reservation-title">
+                                                        {a.serviceName}
+                                                        <span className={`badge badge-${a.status.toLowerCase()}`}>
+                                                            {a.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="salon-row">
+                                                        <i className="ti ti-user"></i> {a.clientName}
+                                                    </p>
+                                                    <p className="salon-row">
+                                                        <i className="ti ti-briefcase"></i> {a.workerName}
+                                                    </p>
+                                                    <p className="salon-row">
+                                                        <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
+                                                    </p>
+                                                </div>
+                                                {listTab === "upcoming" && a.status === "BOOKED" && (
+                                                    <button
+                                                        className="btn-danger"
+                                                        onClick={() => setConfirmId(a.id)}
+                                                    >
+                                                        Otkaži
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        );
+                    })()
                 )}
             </div>
 
@@ -635,9 +694,10 @@ export default function SalonReservations() {
                                 <i className="ti ti-user"></i>
                                 <div>
                                     <div className="selected-client-name">{selectedAppointment.clientName}</div>
-                                    {selectedAppointment.clientPhone && (
-                                        <div className="selected-client-meta">{selectedAppointment.clientPhone}</div>
-                                    )}
+                                    <div className="selected-client-meta">
+                                        <i className="ti ti-phone"></i>
+                                        {selectedAppointment.clientPhone || "Klijent nema uneseni broj"}
+                                    </div>
                                 </div>
                             </div>
                             <div className="appointment-detail-row">
@@ -760,11 +820,15 @@ export default function SalonReservations() {
                                         </label>
                                         <label style={{ flex: 1 }}>
                                             Vrijeme
-                                            <input
-                                                type="time"
+                                            <select
                                                 value={manualForm.time}
                                                 onChange={(e) => setManualForm({ ...manualForm, time: e.target.value })}
-                                            />
+                                            >
+                                                <option value="">--:--</option>
+                                                {TIMES.map((t) => (
+                                                    <option key={t} value={t}>{t}</option>
+                                                ))}
+                                            </select>
                                         </label>
                                     </div>
                                 </>

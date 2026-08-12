@@ -38,6 +38,12 @@ public class Salon {
 
     private LocalDateTime subscriptionExpires;
 
+    // koliko dana unaprijed klijenti mogu rezervirati (null = bez ograničenja)
+    private Integer maxAdvanceBookingDays;
+
+    // minimalna najava prije termina, u satima (null = bez ograničenja)
+    private Integer minNoticeHours;
+
     @Column(nullable = false)
     private boolean isActive;
 

@@ -46,6 +46,9 @@ public class Appointment {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean reminderSent;
+
     @PrePersist
 
     protected void onCreate() {

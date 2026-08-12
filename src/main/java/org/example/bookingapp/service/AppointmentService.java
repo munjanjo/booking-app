@@ -1,13 +1,12 @@
 package org.example.bookingapp.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.bookingapp.dto.AppointmentRequest;
-import org.example.bookingapp.dto.AppointmentResponse;
-import org.example.bookingapp.dto.RescheduleRequest;
+import org.example.bookingapp.dto.*;
 import org.example.bookingapp.entity.*;
 import org.example.bookingapp.repository.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -26,6 +25,67 @@ public class AppointmentService {
     private final WorkerRepository workerRepository;
     private final UserRepository userRepository;
     private final WorkingHoursRepository workingHoursRepository;
+    private final WorkingHoursExceptionRepository workingHoursExceptionRepository;
+    private final SalonClosureRepository salonClosureRepository;
+
+    private record ShiftRange(LocalTime openTime, LocalTime closeTime) {}
+
+    /**
+     * Zatvorenost cijelog salona (SalonClosure) ima prednost nad svime ostalim — ako je salon
+     * zatvoren taj dan, radnik nema slobodnih smjena bez obzira na svoj osobni raspored.
+     * Nakon toga, iznimka za konkretan datum (WorkingHoursException) ima prednost nad tjednim
+     * rasporedom (WorkingHours).
+     */
+    private List<ShiftRange> getEffectiveShifts(UUID salonId, UUID workerId, LocalDate date) {
+        if (salonClosureRepository.existsBySalonIdAndDate(salonId, date)) {
+            return List.of();
+        }
+        var exception = workingHoursExceptionRepository.findByWorkerIdAndDate(workerId, date);
+        if (exception.isPresent()) {
+            WorkingHoursException ex = exception.get();
+            if (ex.isAllDayOff()) {
+                return List.of();
+            }
+            return List.of(new ShiftRange(ex.getOpenTime(), ex.getCloseTime()));
+        }
+        int dayOfWeek = date.getDayOfWeek().getValue();
+        return workingHoursRepository.findByWorkerIdAndDayOfWeek(workerId, dayOfWeek).stream()
+                .filter(WorkingHours::isOpen)
+                .map(wh -> new ShiftRange(wh.getOpenTime(), wh.getCloseTime()))
+                .toList();
+    }
+
+    /**
+     * Postavke salona za koliko unaprijed klijenti mogu rezervirati i koliko rane najave treba.
+     * Vlasnik salona (ručni unos) svjesno zaobilazi ovu provjeru — walk-in klijent može doći odmah.
+     */
+    private void validateBookingWindow(Salon salon, LocalDateTime startTime) {
+        if (salon.getMaxAdvanceBookingDays() != null
+                && startTime.toLocalDate().isAfter(LocalDate.now().plusDays(salon.getMaxAdvanceBookingDays()))) {
+            throw new RuntimeException(
+                    "Termin je izvan dozvoljenog raspona — moguće je rezervirati najviše "
+                            + salon.getMaxAdvanceBookingDays() + " dana unaprijed");
+        }
+        if (salon.getMinNoticeHours() != null
+                && startTime.isBefore(LocalDateTime.now().plusHours(salon.getMinNoticeHours()))) {
+            throw new RuntimeException(
+                    "Potrebna je najava od barem " + salon.getMinNoticeHours() + " sati prije termina");
+        }
+    }
+
+    private boolean isWithinBookingWindow(Salon salon, LocalDateTime startTime) {
+        if (salon.getMaxAdvanceBookingDays() != null) {
+            LocalDate maxDate = LocalDate.now().plusDays(salon.getMaxAdvanceBookingDays());
+            if (startTime.toLocalDate().isAfter(maxDate)) {
+                return false;
+            }
+        }
+        if (salon.getMinNoticeHours() != null
+                && startTime.isBefore(LocalDateTime.now().plusHours(salon.getMinNoticeHours()))) {
+            return false;
+        }
+        return true;
+    }
 
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext()
@@ -39,6 +99,7 @@ public class AppointmentService {
         return AppointmentResponse.builder().id(appointment.getId())
                 .clientId(appointment.getClient().getId())
                 .clientName(appointment.getClient().getName())
+                .clientPhone(appointment.getClient().getPhone())
                 .salonId(appointment.getSalon().getId())
                 .salonName(appointment.getSalon().getName())
                 .serviceId(appointment.getService().getId())
@@ -73,15 +134,14 @@ public class AppointmentService {
 
         LocalDateTime startTime = request.getStartTime();
         LocalDateTime endTime = startTime.plusMinutes(service.getDurationMinutes());
-        int dayOfWeek = startTime.getDayOfWeek().getValue();
-        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(worker.getId(), dayOfWeek);
+        validateBookingWindow(salon, startTime);
+        List<ShiftRange> dayShifts = getEffectiveShifts(salon.getId(), worker.getId(), startTime.toLocalDate());
         if (dayShifts.isEmpty()) {
             throw new RuntimeException("Nema definirano radno vrijeme za taj dan");
         }
-        boolean withinShift = dayShifts.stream().anyMatch(wh ->
-                wh.isOpen()
-                        && !startTime.toLocalTime().isBefore(wh.getOpenTime())
-                        && !endTime.toLocalTime().isAfter(wh.getCloseTime())
+        boolean withinShift = dayShifts.stream().anyMatch(s ->
+                !startTime.toLocalTime().isBefore(s.openTime())
+                        && !endTime.toLocalTime().isAfter(s.closeTime())
         );
         if (!withinShift) {
             throw new RuntimeException("Termin nije unutar radnog vremena radnika");
@@ -109,6 +169,97 @@ public class AppointmentService {
         Appointment saved = appointmentRepository.save(appointment);
         return toResponse(saved);
     }
+
+    public List<UserSearchResponse> searchClients(String query) {
+        return userRepository.searchClients(query).stream()
+                .map(u -> UserSearchResponse.builder()
+                        .id(u.getId())
+                        .name(u.getName())
+                        .email(u.getEmail())
+                        .phone(u.getPhone())
+                        .build())
+                .toList();
+    }
+
+    public AppointmentResponse createManualAppointment(ManualAppointmentRequest request) {
+        User owner = getCurrentUser();
+        Salon salon = salonRepository.findById(request.getSalonId())
+                .orElseThrow(() -> new RuntimeException("Salon nije pronađen"));
+        if (!salon.getOwner().getId().equals(owner.getId())) {
+            throw new RuntimeException("nemate ovlasti za ovu radnju");
+        }
+
+        User client = resolveClient(request);
+
+        Service service = serviceRepository.findById(request.getServiceId())
+                .orElseThrow(() -> new RuntimeException("Usluga nije pronađena"));
+        if (!service.getSalon().getId().equals(salon.getId())) {
+            throw new RuntimeException("Usluga ne pripada odabranom salonu");
+        }
+
+        Worker worker = workerRepository.findById(request.getWorkerId())
+                .orElseThrow(() -> new RuntimeException("Radnik nije pronađen"));
+        if (!worker.getSalon().getId().equals(salon.getId())) {
+            throw new RuntimeException("Radnik ne pripada odabranom salonu");
+        }
+
+        LocalDateTime startTime = request.getStartTime();
+        LocalDateTime endTime = startTime.plusMinutes(service.getDurationMinutes());
+        List<ShiftRange> dayShifts = getEffectiveShifts(salon.getId(), worker.getId(), startTime.toLocalDate());
+        if (dayShifts.isEmpty()) {
+            throw new RuntimeException("Nema definirano radno vrijeme za taj dan");
+        }
+        boolean withinShift = dayShifts.stream().anyMatch(s ->
+                !startTime.toLocalTime().isBefore(s.openTime())
+                        && !endTime.toLocalTime().isAfter(s.closeTime())
+        );
+        if (!withinShift) {
+            throw new RuntimeException("Termin nije unutar radnog vremena radnika");
+        }
+        boolean overlaps = appointmentRepository
+                .existsByWorkerAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                        worker,
+                        Appointment.Status.BOOKED,
+                        endTime,
+                        startTime
+                );
+        if (overlaps) {
+            throw new RuntimeException("Termin je već zauzet");
+        }
+
+        Appointment appointment = Appointment.builder()
+                .client(client)
+                .salon(salon)
+                .service(service)
+                .worker(worker)
+                .startTime(startTime)
+                .endTime(endTime)
+                .build();
+
+        Appointment saved = appointmentRepository.save(appointment);
+        return toResponse(saved);
+    }
+
+    private User resolveClient(ManualAppointmentRequest request) {
+        if (request.getClientId() != null) {
+            return userRepository.findById(request.getClientId())
+                    .orElseThrow(() -> new RuntimeException("Klijent nije pronađen"));
+        }
+        if (request.getNewClient() != null) {
+            if (userRepository.existsByEmail(request.getNewClient().getEmail())) {
+                throw new RuntimeException("Korisnik s tim emailom već postoji, pretraži ga");
+            }
+            User newClient = User.builder()
+                    .name(request.getNewClient().getName())
+                    .email(request.getNewClient().getEmail())
+                    .phone(request.getNewClient().getPhone())
+                    .role(User.Role.CLIENT)
+                    .build();
+            return userRepository.save(newClient);
+        }
+        throw new RuntimeException("Odaberi postojećeg klijenta ili unesi podatke novog klijenta");
+    }
+
     public List<AppointmentResponse> getMyAppointments(){
         User client = getCurrentUser();
         return appointmentRepository.findByClientAndStatus(client,Appointment.Status.BOOKED)
@@ -142,8 +293,7 @@ public class AppointmentService {
         if(!worker.getSalon().getId().equals(salon.getId())){
             throw new RuntimeException("radnik ne pripada salonu");
         }
-        int dayOfWeek=date.getDayOfWeek().getValue();
-        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(workerId, dayOfWeek);
+        List<ShiftRange> dayShifts = getEffectiveShifts(salonId, workerId, date);
         if (dayShifts.isEmpty()) {
             throw new RuntimeException("Radnik nema definirano radno vrijeme za taj dan");
         }
@@ -157,19 +307,17 @@ public class AppointmentService {
                         dayEnd
                 );
         List<String> availableSlots=new ArrayList<>();
-        for (WorkingHours workingHours : dayShifts) {
-            if (!workingHours.isOpen()) {
-                continue;
-            }
-            LocalTime current = workingHours.getOpenTime();
-            LocalTime closeTime = workingHours.getCloseTime();
+        for (ShiftRange shift : dayShifts) {
+            LocalTime current = shift.openTime();
+            LocalTime closeTime = shift.closeTime();
             while (!current.plusMinutes(service.getDurationMinutes()).isAfter(closeTime)) {
                 LocalDateTime slotStart = LocalDateTime.of(date, current);
                 LocalDateTime slotEnd = slotStart.plusMinutes(service.getDurationMinutes());
                 boolean overlaps = appointments.stream().anyMatch(appointment ->
                         appointment.getStartTime().isBefore(slotEnd)
                         && appointment.getEndTime().isAfter(slotStart));
-                if (!overlaps) {
+                boolean withinBookingWindow = isWithinBookingWindow(salon, slotStart);
+                if (!overlaps && withinBookingWindow) {
                     availableSlots.add(current.toString());
                 }
                 current = current.plusMinutes(30);
@@ -191,6 +339,41 @@ public class AppointmentService {
         appointment.setStatus(Appointment.Status.CANCELLED);
         appointmentRepository.save(appointment);
     }
+    public AnalyticsSummaryResponse getAnalyticsSummary(UUID salonId, LocalDateTime startTime, LocalDateTime endTime) {
+        User owner = getCurrentUser();
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("salon nije pronaden"));
+        if (!owner.getId().equals(salon.getOwner().getId())) {
+            throw new RuntimeException("nemate dozvolu za pristup analtici ovog objekta");
+        }
+        Long booked = appointmentRepository.countBySalonAndStatusAndStartTimeBetween(salon, Appointment.Status.BOOKED, startTime, endTime);
+        Long cancelled = appointmentRepository.countBySalonAndStatusAndStartTimeBetween(salon, Appointment.Status.CANCELLED, startTime, endTime);
+        BigDecimal revenue = appointmentRepository.sumRevenueBySalonAndStatusAndPeriod(salon, Appointment.Status.BOOKED,startTime,endTime,LocalDateTime.now());
+        return AnalyticsSummaryResponse.builder()
+                .totalBooked(booked)
+                .totalCancelled(cancelled)
+                .total(booked + cancelled)
+                .revenue(revenue)
+                .build();
+    }
+
+    public List<ServiceAnalyticsResponse> getServiceBreakdown(UUID salonId, LocalDateTime startTime, LocalDateTime endTime) {
+        User owner = getCurrentUser();
+        Salon salon = salonRepository.findById(salonId)
+                .orElseThrow(() -> new RuntimeException("salon nije pronaden"));
+        if (!owner.getId().equals(salon.getOwner().getId())) {
+            throw new RuntimeException("nemate dozvolu za pristup analtici ovog objekta");
+        }
+        return appointmentRepository.findServiceBreakdown(salon, Appointment.Status.BOOKED, startTime, endTime)
+                .stream()
+                .map(row -> ServiceAnalyticsResponse.builder()
+                        .serviceId((UUID) row[0])
+                        .serviceName((String) row[1])
+                        .bookedCount((Long) row[2])
+                        .revenue((BigDecimal) row[3])
+                        .build())
+                .toList();
+    }
     public AppointmentResponse rescheduleAppointment(UUID appointmentId, RescheduleRequest request) {
         User owner = getCurrentUser();
 
@@ -207,15 +390,13 @@ public class AppointmentService {
         }
         LocalDateTime startTime = request.getStartTime();
         LocalDateTime endTime = startTime.plusMinutes(appointment.getService().getDurationMinutes());
-        int dayOfWeek = startTime.getDayOfWeek().getValue();
-        List<WorkingHours> dayShifts = workingHoursRepository.findByWorkerIdAndDayOfWeek(worker.getId(), dayOfWeek);
+        List<ShiftRange> dayShifts = getEffectiveShifts(appointment.getSalon().getId(), worker.getId(), startTime.toLocalDate());
         if (dayShifts.isEmpty()) {
             throw new RuntimeException("Nema definirano radno vrijeme za taj dan");
         }
-        boolean withinShift = dayShifts.stream().anyMatch(wh ->
-                wh.isOpen()
-                        && !startTime.toLocalTime().isBefore(wh.getOpenTime())
-                        && !endTime.toLocalTime().isAfter(wh.getCloseTime())
+        boolean withinShift = dayShifts.stream().anyMatch(s ->
+                !startTime.toLocalTime().isBefore(s.openTime())
+                        && !endTime.toLocalTime().isAfter(s.closeTime())
         );
         if (!withinShift) {
             throw new RuntimeException("Termin nije unutar radnog vremena radnika");
@@ -239,5 +420,6 @@ public class AppointmentService {
         Appointment saved = appointmentRepository.save(appointment);
         return toResponse(saved);
     }
+
 
 }

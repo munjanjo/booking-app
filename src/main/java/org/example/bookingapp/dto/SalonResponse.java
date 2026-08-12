@@ -17,6 +17,9 @@ public class SalonResponse {
     private String phone;
     private String subscriptionPlan;
     private LocalDateTime subscriptionExpires;
+    private Integer maxAdvanceBookingDays;
+    private Integer minNoticeHours;
+    private String coverImageUrl;
     private boolean isActive;
     private LocalDateTime createdAt;
 }
