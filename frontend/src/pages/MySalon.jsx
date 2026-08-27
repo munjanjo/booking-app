@@ -419,6 +419,16 @@ export default function MySalon() {
 
                 {error && <p className="auth-error">{error}</p>}
 
+                {!mySalon.active && (
+                    <div className="salon-pending-banner">
+                        <i className="ti ti-clock-hour-4"></i>
+                        <div>
+                            <strong>Salon čeka odobrenje.</strong> Slobodno uredi sve postavke u
+                            međuvremenu — čim ga odobrimo, postat će vidljiv u pretrazi za klijente.
+                        </div>
+                    </div>
+                )}
+
                 <div className="dashboard-layout">
                     <nav className="dashboard-nav">
                         {TABS.map((tab) => (

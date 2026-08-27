@@ -10,7 +10,6 @@ function Register() {
         password: "",
         confirmPassword: "",
         phone: "",
-        role: "CLIENT",
     });
     const [error, setError] = useState("");
     const [submitted, setSubmitted] = useState(false);
@@ -32,7 +31,6 @@ function Register() {
                 email: form.email,
                 password: form.password,
                 phone: form.phone,
-                role: form.role,
             });
             setSubmitted(true);
         } catch (err) {
@@ -103,12 +101,6 @@ function Register() {
 
                 <label>Telefon</label>
                 <input type="tel" name="phone" value={form.phone} onChange={handleChange} required />
-
-                <label>Tip računa</label>
-                <select name="role" value={form.role} onChange={handleChange}>
-                    <option value="CLIENT">Klijent</option>
-                    <option value="SALON_OWNER">Vlasnik salona</option>
-                </select>
 
                 <button type="submit">Registriraj se</button>
 

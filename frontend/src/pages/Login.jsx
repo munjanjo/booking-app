@@ -19,7 +19,6 @@ function Login() {
             const res = await client.post("/auth/login", { email, password });
             localStorage.setItem("token", res.data.token);
             localStorage.setItem("name", res.data.name);
-            localStorage.setItem("role", res.data.role);
             navigate("/");
         } catch (err) {
             const message = err.response?.data?.message || "Pogrešan email ili lozinka";

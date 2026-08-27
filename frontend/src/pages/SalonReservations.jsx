@@ -14,13 +14,6 @@ const PX_PER_MIN = HOUR_HEIGHT / 60;
 const TRACK_HEIGHT = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
 const SNAP_MIN = 30;
 
-// sva vremena u koracima od 30 min, uvijek 24h format
-const TIMES = [];
-for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 30) {
-        TIMES.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-    }
-}
 
 function formatDate(isoString) {
     return new Date(isoString).toLocaleString("hr-HR", {
@@ -88,13 +81,36 @@ export default function SalonReservations() {
         time: "",
     });
     const [manualError, setManualError] = useState("");
+    const [manualSlots, setManualSlots] = useState([]);
+    const [manualSlotsLoading, setManualSlotsLoading] = useState(false);
     const [slotLocked, setSlotLocked] = useState(false);
     const [clientQuery, setClientQuery] = useState("");
     const [clientResults, setClientResults] = useState([]);
     const [selectedClient, setSelectedClient] = useState(null);
     const [showNewClientForm, setShowNewClientForm] = useState(false);
     const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
+    const [toast, setToast] = useState(null);
+    const [highlightedId, setHighlightedId] = useState(null);
     const justDraggedRef = useRef(false);
+
+    useEffect(() => {
+        if (!highlightedId) return;
+        const timer = setTimeout(() => {
+            document
+                .querySelector(`[data-appointment-id="${highlightedId}"]`)
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 120);
+        const clearHighlight = setTimeout(() => setHighlightedId(null), 3000);
+        return () => {
+            clearTimeout(timer);
+            clearTimeout(clearHighlight);
+        };
+    }, [highlightedId]);
+
+    const showToast = (message) => {
+        setToast(message);
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const submitCancel = async (id) => {
         setError("");
@@ -107,11 +123,38 @@ export default function SalonReservations() {
         setConfirmId(null);
     };
 
+    const submitNoShow = async (id) => {
+        setError("");
+        try {
+            const res = await client.put(`/appointments/${id}/no-show`);
+            setAppointments((prev) => prev.map((a) => (a.id === id ? res.data : a)));
+        } catch {
+            setError("Greška prilikom označavanja termina.");
+        }
+        setSelectedAppointment(null);
+    };
+
     useEffect(() => {
         client.get("/salons/my")
             .then((res) => setSalonId(res.data[0]?.id))
             .catch(() => setError("Greška pri dohvaćanju salona"));
     }, []);
+
+    useEffect(() => {
+        const { serviceId, workerId, date } = manualForm;
+        if (!salonId || !serviceId || !workerId || !date || slotLocked) {
+            setManualSlots([]);
+            return;
+        }
+        setManualSlotsLoading(true);
+        client
+            .get(`/appointments/salons/${salonId}/available-slots`, {
+                params: { serviceId, workerId, date, ignoreBookingWindow: true },
+            })
+            .then((res) => setManualSlots(res.data))
+            .catch(() => setManualSlots([]))
+            .finally(() => setManualSlotsLoading(false));
+    }, [salonId, manualForm.serviceId, manualForm.workerId, manualForm.date, slotLocked]);
 
     useEffect(() => {
         if (salonId) {
@@ -401,6 +444,12 @@ export default function SalonReservations() {
             });
             setAppointments([...appointments, res.data]);
             setShowManualModal(false);
+            setView("calendar");
+            setSelectedDate(new Date(`${date}T00:00:00`));
+            setHighlightedId(res.data.id);
+            showToast(
+                `Rezervacija kreirana — ${res.data.serviceName} · ${res.data.clientName}, ${date} u ${time}`
+            );
         } catch (err) {
             setManualError(err.response?.data?.error || "Greška pri kreiranju rezervacije");
         }
@@ -551,9 +600,10 @@ export default function SalonReservations() {
                                                 return (
                                                     <div
                                                         key={a.id}
-                                                        className={`calendar-block ${compact ? "calendar-block-compact" : ""} ${isPast ? "calendar-block-past" : ""} ${isDragging ? "calendar-block-dragging" : ""}`}
+                                                        data-appointment-id={a.id}
+                                                        className={`calendar-block ${compact ? "calendar-block-compact" : ""} ${isPast ? "calendar-block-past" : ""} ${isDragging ? "calendar-block-dragging" : ""} ${highlightedId === a.id ? "calendar-block-highlight" : ""} ${a.status === "NO_SHOW" ? "calendar-block-noshow" : ""}`}
                                                         style={{ top, height }}
-                                                        draggable={!isPast}
+                                                        draggable={!isPast && a.status === "BOOKED"}
                                                         onDragStart={() => handleDragStart(a)}
                                                         onDragEnd={handleDragEnd}
                                                         onClick={(e) => {
@@ -589,6 +639,11 @@ export default function SalonReservations() {
                                                                         </span>
                                                                     )}
                                                                 </div>
+                                                                {a.status === "NO_SHOW" && !compact && (
+                                                                    <span className="noshow-tag">
+                                                                        <i className="ti ti-clock-x"></i> Nije se pojavio/la
+                                                                    </span>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>
@@ -718,15 +773,26 @@ export default function SalonReservations() {
                             <button className="btn-ghost" onClick={() => setSelectedAppointment(null)}>
                                 Zatvori
                             </button>
-                            <button
-                                className="btn-danger"
-                                onClick={() => {
-                                    setConfirmId(selectedAppointment.id);
-                                    setSelectedAppointment(null);
-                                }}
-                            >
-                                Otkaži rezervaciju
-                            </button>
+                            {new Date(selectedAppointment.endTime) < new Date() &&
+                                selectedAppointment.status === "BOOKED" && (
+                                    <button
+                                        className="btn-noshow"
+                                        onClick={() => submitNoShow(selectedAppointment.id)}
+                                    >
+                                        <i className="ti ti-clock-x"></i> Nije se pojavio/la
+                                    </button>
+                                )}
+                            {selectedAppointment.status === "BOOKED" && (
+                                <button
+                                    className="btn-danger"
+                                    onClick={() => {
+                                        setConfirmId(selectedAppointment.id);
+                                        setSelectedAppointment(null);
+                                    }}
+                                >
+                                    Otkaži rezervaciju
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -754,180 +820,214 @@ export default function SalonReservations() {
 
             {showManualModal && (
                 <div className="modal-overlay" onClick={() => setShowManualModal(false)}>
-                    <div className="modal modal-form" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal modal-form manual-modal" onClick={(e) => e.stopPropagation()}>
                         <h3>Nova rezervacija</h3>
                         <p className="page-subtitle">Za klijenta koji je rezervirao telefonski ili osobno.</p>
                         <form className="manual-booking-form" onSubmit={submitManualAppointment}>
                             {manualError && <p className="auth-error">{manualError}</p>}
 
-                            {slotLocked && (
-                                <div className="selected-client-card">
-                                    <div>
-                                        <div className="selected-client-name">
-                                            {workers.find((w) => w.id === manualForm.workerId)?.name}
-                                        </div>
-                                        <div className="selected-client-meta">
-                                            {manualForm.date} u {manualForm.time}
-                                        </div>
-                                    </div>
-                                    <button type="button" className="btn-ghost" onClick={() => setSlotLocked(false)}>
-                                        Promijeni
-                                    </button>
+                            <div className="manual-step">
+                                <div className="step-head">
+                                    <span className="step-num">1</span>
+                                    <h4>Termin</h4>
                                 </div>
-                            )}
 
-                            <label>
-                                Usluga
-                                <select
-                                    value={manualForm.serviceId}
-                                    onChange={(e) => setManualForm({ ...manualForm, serviceId: e.target.value })}
-                                >
-                                    <option value="">Odaberi uslugu</option>
-                                    {services.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name} ({s.durationMinutes} min)
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            {!slotLocked && (
-                                <>
-                                    <label>
-                                        Radnik
-                                        <select
-                                            value={manualForm.workerId}
-                                            onChange={(e) => setManualForm({ ...manualForm, workerId: e.target.value })}
-                                        >
-                                            <option value="">Odaberi radnika</option>
-                                            {workers.map((w) => (
-                                                <option key={w.id} value={w.id}>
-                                                    {w.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </label>
-
-                                    <div style={{ display: "flex", gap: "10px" }}>
-                                        <label style={{ flex: 1 }}>
-                                            Datum
-                                            <input
-                                                type="date"
-                                                value={manualForm.date}
-                                                min={toYMD(new Date())}
-                                                onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
-                                            />
-                                        </label>
-                                        <label style={{ flex: 1 }}>
-                                            Vrijeme
+                                {slotLocked ? (
+                                    <div className="selected-client-card">
+                                        <div>
+                                            <div className="selected-client-name">
+                                                <i className="ti ti-user"></i>{" "}
+                                                {workers.find((w) => w.id === manualForm.workerId)?.name}
+                                            </div>
+                                            <div className="selected-client-meta">
+                                                <i className="ti ti-calendar"></i> {manualForm.date}
+                                                <i className="ti ti-clock"></i> {manualForm.time}
+                                            </div>
+                                        </div>
+                                        <button type="button" className="btn-ghost" onClick={() => setSlotLocked(false)}>
+                                            Promijeni
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="manual-step-body">
+                                        <label>
+                                            Usluga
                                             <select
-                                                value={manualForm.time}
-                                                onChange={(e) => setManualForm({ ...manualForm, time: e.target.value })}
+                                                value={manualForm.serviceId}
+                                                onChange={(e) => setManualForm({ ...manualForm, serviceId: e.target.value, time: "" })}
                                             >
-                                                <option value="">--:--</option>
-                                                {TIMES.map((t) => (
-                                                    <option key={t} value={t}>{t}</option>
+                                                <option value="">Odaberi uslugu</option>
+                                                {services.map((s) => (
+                                                    <option key={s.id} value={s.id}>
+                                                        {s.name} ({s.durationMinutes} min)
+                                                    </option>
                                                 ))}
                                             </select>
                                         </label>
-                                    </div>
-                                </>
-                            )}
 
-                            {selectedClient ? (
-                                <div className="selected-client-card">
-                                    <div>
-                                        <div className="selected-client-name">{selectedClient.name}</div>
-                                        <div className="selected-client-meta">
-                                            {selectedClient.email}
-                                            {selectedClient.phone ? ` · ${selectedClient.phone}` : ""}
+                                        <div className="manual-step-row">
+                                            <label>
+                                                Radnik
+                                                <select
+                                                    value={manualForm.workerId}
+                                                    onChange={(e) => setManualForm({ ...manualForm, workerId: e.target.value, time: "" })}
+                                                >
+                                                    <option value="">Odaberi radnika</option>
+                                                    {workers.map((w) => (
+                                                        <option key={w.id} value={w.id}>
+                                                            {w.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                            <label>
+                                                Datum
+                                                <input
+                                                    type="date"
+                                                    value={manualForm.date}
+                                                    min={toYMD(new Date())}
+                                                    onChange={(e) => setManualForm({ ...manualForm, date: e.target.value, time: "" })}
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <div className="manual-slots-field">
+                                            <span className="manual-slots-label">Vrijeme</span>
+                                            {!manualForm.serviceId || !manualForm.workerId || !manualForm.date ? (
+                                                <p className="services-empty">Prvo odaberi uslugu, radnika i datum.</p>
+                                            ) : manualSlotsLoading ? (
+                                                <p className="services-empty">Učitavanje slobodnih termina...</p>
+                                            ) : manualSlots.length === 0 ? (
+                                                <p className="services-empty">Nema slobodnih termina za odabrani dan.</p>
+                                            ) : (
+                                                <div className="slot-grid">
+                                                    {manualSlots.map((t) => (
+                                                        <button
+                                                            key={t}
+                                                            type="button"
+                                                            className={`slot ${manualForm.time === t ? "selected" : ""}`}
+                                                            onClick={() => setManualForm({ ...manualForm, time: t })}
+                                                        >
+                                                            {t}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        className="btn-ghost"
-                                        onClick={() => setSelectedClient(null)}
-                                    >
-                                        Promijeni
-                                    </button>
+                                )}
+                            </div>
+
+                            <div className="manual-step">
+                                <div className="step-head">
+                                    <span className="step-num">2</span>
+                                    <h4>Klijent</h4>
                                 </div>
-                            ) : showNewClientForm ? (
-                                <>
-                                    <label>
-                                        Ime klijenta
-                                        <input
-                                            type="text"
-                                            value={newClient.name}
-                                            onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
-                                            placeholder="npr. Marko Marić"
-                                        />
-                                    </label>
-                                    <label>
-                                        Email
-                                        <input
-                                            type="email"
-                                            value={newClient.email}
-                                            onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                                            placeholder="npr. marko@primjer.com"
-                                        />
-                                    </label>
-                                    <label>
-                                        Telefon (opcionalno)
-                                        <input
-                                            type="text"
-                                            value={newClient.phone}
-                                            onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
-                                            placeholder="npr. 0911234567"
-                                        />
-                                    </label>
-                                    <button
-                                        type="button"
-                                        className="btn-ghost"
-                                        onClick={() => setShowNewClientForm(false)}
-                                    >
-                                        ← Natrag na pretragu
-                                    </button>
-                                </>
-                            ) : (
-                                <label style={{ position: "relative" }}>
-                                    Klijent
-                                    <input
-                                        type="text"
-                                        value={clientQuery}
-                                        onChange={(e) => setClientQuery(e.target.value)}
-                                        placeholder="Pretraži po imenu, emailu ili telefonu"
-                                    />
-                                    {clientResults.length > 0 && (
-                                        <div className="client-search-results">
-                                            {clientResults.map((c) => (
-                                                <div
-                                                    key={c.id}
-                                                    className="client-search-result"
-                                                    onClick={() => {
-                                                        setSelectedClient(c);
-                                                        setClientQuery("");
-                                                        setClientResults([]);
-                                                    }}
-                                                >
-                                                    <div className="selected-client-name">{c.name}</div>
-                                                    <div className="selected-client-meta">
-                                                        {c.email}
-                                                        {c.phone ? ` · ${c.phone}` : ""}
-                                                    </div>
+
+                                <div className="manual-step-body">
+                                    {selectedClient ? (
+                                        <div className="selected-client-card">
+                                            <div>
+                                                <div className="selected-client-name">{selectedClient.name}</div>
+                                                <div className="selected-client-meta">
+                                                    {selectedClient.email}
+                                                    {selectedClient.phone ? ` · ${selectedClient.phone}` : ""}
                                                 </div>
-                                            ))}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn-ghost"
+                                                onClick={() => setSelectedClient(null)}
+                                            >
+                                                Promijeni
+                                            </button>
                                         </div>
+                                    ) : showNewClientForm ? (
+                                        <>
+                                            <label>
+                                                Ime klijenta
+                                                <input
+                                                    type="text"
+                                                    value={newClient.name}
+                                                    onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                                                    placeholder="npr. Marko Marić"
+                                                />
+                                            </label>
+                                            <label>
+                                                Email
+                                                <input
+                                                    type="email"
+                                                    value={newClient.email}
+                                                    onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                                                    placeholder="npr. marko@primjer.com"
+                                                />
+                                            </label>
+                                            <label>
+                                                Telefon (opcionalno)
+                                                <input
+                                                    type="text"
+                                                    value={newClient.phone}
+                                                    onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                                                    placeholder="npr. 0911234567"
+                                                />
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="btn-ghost"
+                                                onClick={() => setShowNewClientForm(false)}
+                                            >
+                                                ← Natrag na pretragu
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <label style={{ position: "relative" }}>
+                                            Pretraži klijenta
+                                            <input
+                                                type="text"
+                                                value={clientQuery}
+                                                onChange={(e) => setClientQuery(e.target.value)}
+                                                placeholder="Ime, email ili telefon"
+                                            />
+                                            {clientResults.length > 0 && (
+                                                <div className="client-search-results">
+                                                    {clientResults.map((c) => (
+                                                        <div
+                                                            key={c.id}
+                                                            className="client-search-result"
+                                                            onClick={() => {
+                                                                setSelectedClient(c);
+                                                                setClientQuery("");
+                                                                setClientResults([]);
+                                                            }}
+                                                        >
+                                                            <div className="client-search-result-top">
+                                                                <div className="selected-client-name">{c.name}</div>
+                                                                {c.noShowCount > 0 && (
+                                                                    <span className="noshow-warning">
+                                                                        <i className="ti ti-clock-x"></i>
+                                                                        {c.noShowCount}× no-show
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="selected-client-meta">
+                                                                {c.email}
+                                                                {c.phone ? ` · ${c.phone}` : ""}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="btn-ghost manual-new-client-btn"
+                                                onClick={() => setShowNewClientForm(true)}
+                                            >
+                                                <i className="ti ti-plus"></i> Novi klijent
+                                            </button>
+                                        </label>
                                     )}
-                                    <button
-                                        type="button"
-                                        className="btn-ghost"
-                                        style={{ marginTop: "8px" }}
-                                        onClick={() => setShowNewClientForm(true)}
-                                    >
-                                        + Novi klijent
-                                    </button>
-                                </label>
-                            )}
+                                </div>
+                            </div>
 
                             <div className="modal-actions">
                                 <button
@@ -943,6 +1043,13 @@ export default function SalonReservations() {
                             </div>
                         </form>
                     </div>
+                </div>
+            )}
+
+            {toast && (
+                <div className="toast toast-success">
+                    <i className="ti ti-circle-check"></i>
+                    {toast}
                 </div>
             )}
         </div>

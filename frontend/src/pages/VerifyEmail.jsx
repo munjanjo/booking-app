@@ -20,7 +20,6 @@ function VerifyEmail() {
             .then((res) => {
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("name", res.data.name);
-                localStorage.setItem("role", res.data.role);
                 setStatus("success");
                 setTimeout(() => navigate("/"), 1500);
             })

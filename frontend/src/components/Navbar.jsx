@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
+import client from "../api/client";
 
 function getInitials(name) {
     if (!name) return "?";
@@ -11,9 +12,16 @@ function getInitials(name) {
 
 export default function Navbar() {
     const name = localStorage.getItem("name");
-    const role = localStorage.getItem("role");
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [hasSalon, setHasSalon] = useState(false);
+
+    useEffect(() => {
+        client
+            .get("/salons/my")
+            .then((res) => setHasSalon(res.data.length > 0))
+            .catch(() => {});
+    }, []);
 
     const logout = () => {
         localStorage.clear();
@@ -24,18 +32,7 @@ export default function Navbar() {
 
     const links = (
         <>
-            {role === "CLIENT" && (
-                <>
-                    <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
-                        <i className="ti ti-building-store"></i> Saloni
-                    </NavLink>
-                    <NavLink to="/moje-rezervacije" className={linkClass} onClick={() => setMenuOpen(false)}>
-                        <i className="ti ti-calendar-check"></i> Moje rezervacije
-                    </NavLink>
-                </>
-            )}
-
-            {role === "SALON_OWNER" && (
+            {hasSalon && (
                 <>
                     <NavLink to="/moj-salon" className={linkClass} onClick={() => setMenuOpen(false)}>
                         <i className="ti ti-building-store"></i> Moj salon
@@ -43,13 +40,20 @@ export default function Navbar() {
                     <NavLink to="/rezervacije" className={linkClass} onClick={() => setMenuOpen(false)}>
                         <i className="ti ti-calendar-check"></i> Rezervacije
                     </NavLink>
-                    <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
-                        <i className="ti ti-search"></i> Saloni
-                    </NavLink>
-                    <NavLink to="/moje-rezervacije" className={linkClass} onClick={() => setMenuOpen(false)}>
-                        <i className="ti ti-calendar-user"></i> Moje rezervacije
-                    </NavLink>
                 </>
+            )}
+
+            <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
+                <i className="ti ti-search"></i> Saloni
+            </NavLink>
+            <NavLink to="/moje-rezervacije" className={linkClass} onClick={() => setMenuOpen(false)}>
+                <i className="ti ti-calendar-user"></i> Moje rezervacije
+            </NavLink>
+
+            {!hasSalon && (
+                <NavLink to="/moj-salon" className={linkClass} onClick={() => setMenuOpen(false)}>
+                    <i className="ti ti-plus"></i> Dodaj svoj salon
+                </NavLink>
             )}
         </>
     );

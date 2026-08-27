@@ -46,6 +46,8 @@ export default function SalonDetails() {
     const [date, setDate] = useState("");
     const [slots, setSlots] = useState([]);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [reviewSummary, setReviewSummary] = useState(null);
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const bookingRef = useRef(null);
@@ -72,6 +74,18 @@ export default function SalonDetails() {
     useEffect(() => {
         client.get(`/salons/${id}/images`)
             .then((res) => setImages(res.data))
+            .catch(() => {});
+    }, [id]);
+
+    useEffect(() => {
+        client.get(`/salons/${id}/reviews`)
+            .then((res) => setReviews(res.data))
+            .catch(() => {});
+    }, [id]);
+
+    useEffect(() => {
+        client.get(`/salons/${id}/reviews/summary`)
+            .then((res) => setReviewSummary(res.data))
             .catch(() => {});
     }, [id]);
 
@@ -148,6 +162,12 @@ export default function SalonDetails() {
                                     <span><i className="ti ti-map-pin"></i> {salon.address}</span>
                                     {salon.phone && <span><i className="ti ti-phone"></i> {salon.phone}</span>}
                                 </div>
+                                {salon.reviewCount > 0 && (
+                                    <div className="salon-rating-pill">
+                                        <i className="ti ti-star-filled"></i>
+                                        {salon.avgRating.toFixed(1)} · {salon.reviewCount} {salon.reviewCount === 1 ? "recenzija" : "recenzije"}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -160,6 +180,12 @@ export default function SalonDetails() {
                                     <span><i className="ti ti-map-pin"></i> {salon.address}</span>
                                     {salon.phone && <span><i className="ti ti-phone"></i> {salon.phone}</span>}
                                 </div>
+                                {salon.reviewCount > 0 && (
+                                    <div className="salon-rating-pill salon-rating-pill-light">
+                                        <i className="ti ti-star-filled"></i>
+                                        {salon.avgRating.toFixed(1)} · {salon.reviewCount} {salon.reviewCount === 1 ? "recenzija" : "recenzije"}
+                                    </div>
+                                )}
                             </div>
                         )}
                         <button className="btn-primary salon-cta-desktop" onClick={scrollToBooking}>
@@ -243,6 +269,85 @@ export default function SalonDetails() {
                                                     <button className="btn-ghost" onClick={() => pickService(s)}>
                                                         {selectedService?.id === s.id ? "Odabrano" : "Odaberi"}
                                                     </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+
+                            <section className="salon-section">
+                                <h3>Recenzije</h3>
+                                {reviewSummary && reviewSummary.reviewCount > 0 && (
+                                    <div className="review-summary">
+                                        <div className="review-summary-score">
+                                            <span className="review-summary-number">
+                                                {reviewSummary.avgRating.toFixed(1)}
+                                            </span>
+                                            <div className="review-stars review-summary-stars">
+                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                    <i
+                                                        key={i}
+                                                        className={`ti ${
+                                                            i < Math.round(reviewSummary.avgRating)
+                                                                ? "ti-star-filled"
+                                                                : "ti-star"
+                                                        }`}
+                                                    ></i>
+                                                ))}
+                                            </div>
+                                            <span className="review-summary-count">
+                                                {reviewSummary.reviewCount}{" "}
+                                                {reviewSummary.reviewCount === 1 ? "recenzija" : "recenzije"}
+                                            </span>
+                                        </div>
+                                        <div className="review-summary-bars">
+                                            {[5, 4, 3, 2, 1].map((star, i) => {
+                                                const count = reviewSummary.distribution[i];
+                                                const pct = reviewSummary.reviewCount
+                                                    ? (count / reviewSummary.reviewCount) * 100
+                                                    : 0;
+                                                return (
+                                                    <div key={star} className="review-summary-bar-row">
+                                                        <span className="review-summary-bar-label">{star}★</span>
+                                                        <div className="review-summary-bar-track">
+                                                            <div
+                                                                className="review-summary-bar-fill"
+                                                                style={{ width: `${pct}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <span className="review-summary-bar-count">{count}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                                {reviews.length === 0 ? (
+                                    <p className="services-empty">Salon još nema recenzija.</p>
+                                ) : (
+                                    <div className="reviews-list">
+                                        {reviews.map((r) => (
+                                            <div key={r.id} className="review-card">
+                                                <div className="review-avatar">
+                                                    {r.clientName?.charAt(0)?.toUpperCase()}
+                                                </div>
+                                                <div className="review-body">
+                                                    <div className="review-head">
+                                                        <span className="review-name">{r.clientName}</span>
+                                                        <span className="review-date">
+                                                            {new Date(r.createdAt).toLocaleDateString("hr-HR")}
+                                                        </span>
+                                                    </div>
+                                                    <div className="review-stars">
+                                                        {Array.from({ length: 5 }).map((_, i) => (
+                                                            <i
+                                                                key={i}
+                                                                className={`ti ${i < r.rating ? "ti-star-filled" : "ti-star"}`}
+                                                            ></i>
+                                                        ))}
+                                                    </div>
+                                                    {r.comment && <p className="review-comment">{r.comment}</p>}
                                                 </div>
                                             </div>
                                         ))}

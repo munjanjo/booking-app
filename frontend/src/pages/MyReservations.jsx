@@ -17,6 +17,10 @@ export default function MojeRezervacije() {
     const [appointments, setAppointments] = useState([]);
     const [error, setError] = useState("");
     const [tab, setTab] = useState("upcoming");
+    const [ratingTarget, setRatingTarget] = useState(null);
+    const [ratingValue, setRatingValue] = useState(0);
+    const [ratingComment, setRatingComment] = useState("");
+    const [ratingError, setRatingError] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,6 +39,33 @@ export default function MojeRezervacije() {
         }
     };
 
+    const openRating = (a) => {
+        setRatingTarget(a);
+        setRatingValue(0);
+        setRatingComment("");
+        setRatingError("");
+    };
+
+    const submitRating = async () => {
+        if (ratingValue < 1) {
+            setRatingError("Odaberi ocjenu od 1 do 5 zvjezdica.");
+            return;
+        }
+        try {
+            await client.post(`/salons/${ratingTarget.salonId}/reviews`, {
+                appointmentId: ratingTarget.id,
+                rating: ratingValue,
+                comment: ratingComment,
+            });
+            setAppointments((prev) =>
+                prev.map((a) => (a.id === ratingTarget.id ? { ...a, reviewed: true } : a))
+            );
+            setRatingTarget(null);
+        } catch (err) {
+            setRatingError(err.response?.data?.error || "Greška pri slanju recenzije");
+        }
+    };
+
     const now = new Date();
     const upcoming = appointments
         .filter((a) => new Date(a.startTime) >= now)
@@ -44,34 +75,47 @@ export default function MojeRezervacije() {
         .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
     const renderCard = (a, { isPast }) => (
-        <div key={a.id} className="reservation-card">
-            <div className="reservation-info">
-                <div className="reservation-title">
-                    {a.serviceName}
-                    <span className={`badge badge-${a.status.toLowerCase()}`}>
-                        {a.status}
-                    </span>
+        <div key={a.id} className="reservation-card-block">
+            <div className="reservation-card">
+                <div className="reservation-info">
+                    <div className="reservation-title">
+                        {a.serviceName}
+                        <span className={`badge badge-${a.status.toLowerCase()}`}>
+                            {a.status}
+                        </span>
+                    </div>
+                    <p className="salon-row">
+                        <i className="ti ti-building-store"></i> {a.salonName}
+                    </p>
+                    <p className="salon-row">
+                        <i className="ti ti-user"></i> {a.workerName}
+                    </p>
+                    <p className="salon-row">
+                        <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
+                    </p>
                 </div>
-                <p className="salon-row">
-                    <i className="ti ti-building-store"></i> {a.salonName}
-                </p>
-                <p className="salon-row">
-                    <i className="ti ti-user"></i> {a.workerName}
-                </p>
-                <p className="salon-row">
-                    <i className="ti ti-calendar"></i> {formatDate(a.startTime)}
-                </p>
-            </div>
-            {isPast ? (
-                <button className="btn-ghost" onClick={() => navigate(`/salon/${a.salonId}`)}>
-                    <i className="ti ti-repeat"></i> Rezerviraj ponovno
-                </button>
-            ) : (
-                a.status === "BOOKED" && (
-                    <button className="btn-ghost" onClick={() => cancelAppointment(a.id)}>
-                        Otkaži
+                {isPast ? (
+                    <button className="btn-ghost" onClick={() => navigate(`/salon/${a.salonId}`)}>
+                        <i className="ti ti-repeat"></i> Rezerviraj ponovno
                     </button>
-                )
+                ) : (
+                    a.status === "BOOKED" && (
+                        <button className="btn-ghost" onClick={() => cancelAppointment(a.id)}>
+                            Otkaži
+                        </button>
+                    )
+                )}
+            </div>
+            {isPast && a.status === "COMPLETED" && !a.reviewed && (
+                <div className="prompt-card">
+                    <div className="prompt-card-text">
+                        <i className="ti ti-star"></i>
+                        <span>Kako je prošlo kod {a.salonName}?</span>
+                    </div>
+                    <button className="btn-primary btn-sm" onClick={() => openRating(a)}>
+                        Ocijeni
+                    </button>
+                </div>
             )}
         </div>
     );
@@ -128,6 +172,55 @@ export default function MojeRezervacije() {
                     </>
                 )}
             </div>
+
+            {ratingTarget && (
+                <div className="modal-overlay" onClick={() => setRatingTarget(null)}>
+                    <div className="modal rating-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="rating-modal-close" onClick={() => setRatingTarget(null)}>
+                            <i className="ti ti-x"></i>
+                        </button>
+                        <div className="rating-modal-avatar">
+                            <i className="ti ti-building-store"></i>
+                        </div>
+                        <h3>Ocijeni salon</h3>
+                        <p className="rating-modal-subject">{ratingTarget.salonName}</p>
+
+                        <div className="rating-stars-input">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                                <i
+                                    key={n}
+                                    className={`ti ${n <= ratingValue ? "ti-star-filled" : "ti-star"}`}
+                                    onClick={() => setRatingValue(n)}
+                                ></i>
+                            ))}
+                        </div>
+                        {ratingValue > 0 && (
+                            <p className="rating-modal-label">
+                                {["Loše", "Slabo", "U redu", "Dobro", "Odlično"][ratingValue - 1]}
+                            </p>
+                        )}
+
+                        <textarea
+                            className="rating-modal-textarea"
+                            rows={3}
+                            value={ratingComment}
+                            onChange={(e) => setRatingComment(e.target.value)}
+                            placeholder="Podijeli svoje iskustvo (nije obavezno)..."
+                        />
+
+                        {ratingError && <p className="auth-error" style={{ margin: "0 0 4px" }}>{ratingError}</p>}
+
+                        <div className="modal-actions">
+                            <button className="btn-ghost" onClick={() => setRatingTarget(null)}>
+                                Odustani
+                            </button>
+                            <button className="btn-primary" onClick={submitRating}>
+                                Pošalji recenziju
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
