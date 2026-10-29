@@ -47,3 +47,5 @@ dependency-reduced-pom.xml
 
 ### Misc ###
 out/
+### Claude ###
+.claude/
