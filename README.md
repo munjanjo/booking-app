@@ -1,8 +1,8 @@
 # 💇 Booker — Salon Booking App
 
-Full-stack web aplikacija za online rezervaciju termina u salonima (frizerski, kozmetički, barber…).
-Klijenti pretražuju salone, biraju uslugu i radnika te rezerviraju slobodan termin, a vlasnici salona
-upravljaju uslugama, radnicima, radnim vremenom i rezervacijama kroz kalendarski prikaz.
+A full-stack web application for booking salon appointments online (hair, beauty, barber…).
+Clients browse salons, pick a service and a worker, and book a free time slot, while salon owners
+manage services, workers, working hours and bookings through a calendar view.
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white)
@@ -13,69 +13,69 @@ upravljaju uslugama, radnicima, radnim vremenom i rezervacijama kroz kalendarski
 
 ---
 
-## ✨ Funkcionalnosti
+## ✨ Features
 
-### Za klijente
-- Registracija s **verifikacijom e-maila**, prijava, **reset lozinke**
-- Pregled salona s galerijom slika, uslugama i recenzijama
-- Odabir usluge i **konkretnog radnika ili "bilo koji radnik"**
-- Prikaz **slobodnih termina** u realnom vremenu (uzima u obzir radno vrijeme, iznimke, zatvaranja salona i postojeće rezervacije)
-- Pregled, otkazivanje i premještanje vlastitih rezervacija
-- **Recenzije** salona nakon završenog termina
-- Automatski **e-mail podsjetnik 24h prije termina**
+### For clients
+- Sign-up with **email verification**, login and **password reset**
+- Salon pages with an image gallery, services and reviews
+- Choose a service and a **specific worker or "any worker"**
+- **Live available slots** that respect working hours, exceptions, salon closures and existing bookings
+- View, cancel and reschedule your own bookings
+- **Review** a salon after a completed appointment
+- Automatic **email reminder 24 hours before** the appointment
 
-### Za vlasnike salona
-- Kreiranje salona (uz **odobrenje administratora**)
-- Upravljanje uslugama (trajanje, cijena), radnicima i slikama (pohrana na **AWS S3**)
-- Radno vrijeme po radniku + iznimke (godišnji, bolovanje) i zatvaranja salona
-- **Kalendarski prikaz rezervacija s drag & drop** premještanjem
-- Ručni unos rezervacija (npr. telefonske) i pretraga klijenata
-- Označavanje **no-show** termina
-- **Analitika** — sažetak prihoda/rezervacija i statistika po uslugama
+### For salon owners
+- Create a salon (subject to **admin approval**)
+- Manage services (duration, price), workers and images (stored on **AWS S3**)
+- Per-worker working hours, plus exceptions (vacation, sick leave) and salon closures
+- **Calendar view of bookings with drag & drop** rescheduling
+- Manual bookings (e.g. phone bookings) with client search
+- Mark appointments as **no-show**
+- **Analytics**: revenue and booking summary, plus per-service statistics
 
-### Sustav
-- JWT autentikacija (stateless)
-- Scheduled jobovi: podsjetnici i automatsko označavanje prošlih termina kao `COMPLETED`
-- Transakcijski e-mailovi preko **Resend** API-ja
-- OpenAPI / **Swagger UI** dokumentacija
+### System
+- Stateless JWT authentication
+- Scheduled jobs: reminders, and automatically marking past appointments as `COMPLETED`
+- Transactional emails via the **Resend** API
+- OpenAPI / **Swagger UI** documentation
 
 ---
 
 ## 🛠️ Tech stack
 
-| Sloj | Tehnologije |
-|------|-------------|
+| Layer | Technologies |
+|-------|--------------|
 | **Backend** | Java 21, Spring Boot 4 (Web MVC, Data JPA, Security, Validation), JJWT, Lombok, springdoc-openapi |
-| **Baza** | MySQL 8 (Hibernate `ddl-auto: update`) |
+| **Database** | MySQL 8 (Hibernate `ddl-auto: update`) |
 | **Frontend** | React 19, Vite, React Router 7, Tailwind CSS 4, Axios, react-datepicker |
-| **Integracije** | AWS S3 (slike), Resend (e-mail) |
+| **Integrations** | AWS S3 (images), Resend (email) |
 
 ---
 
-## 📁 Struktura projekta
+## 📁 Project structure
 
 ```
 booking-app/
 ├── src/main/java/org/example/bookingapp/
-│   ├── config/        # S3 konfiguracija
-│   ├── controller/    # REST kontroleri
-│   ├── dto/           # request/response objekti
-│   ├── entity/        # JPA entiteti
-│   ├── exception/     # globalni exception handler
-│   ├── repository/    # Spring Data repozitoriji
+│   ├── config/        # S3 configuration
+│   ├── controller/    # REST controllers
+│   ├── dto/           # request/response objects
+│   ├── entity/        # JPA entities
+│   ├── exception/     # global exception handler
+│   ├── repository/    # Spring Data repositories
 │   ├── security/      # JWT filter, SecurityConfig, Swagger
-│   └── service/       # poslovna logika, e-mail, S3, scheduleri
+│   └── service/       # business logic, email, S3, schedulers
 ├── src/main/resources/application.yml
-├── frontend/          # React + Vite klijent
+├── frontend/          # React + Vite client
 │   └── src/
-│       ├── api/       # Axios klijent
+│       ├── api/       # Axios client
 │       ├── components/
 │       ├── hooks/
 │       └── pages/
 └── pom.xml
 ```
 
-### Domenski model
+### Domain model
 
 ```
 User ──< Salon ──< Service
@@ -89,28 +89,28 @@ User ──< Salon ──< Service
 
 ---
 
-## 🚀 Pokretanje lokalno
+## 🚀 Running locally
 
-### Preduvjeti
+### Prerequisites
 - Java 21+
 - Node.js 20+
-- MySQL 8 (baza `booking_db` se kreira automatski)
-- (opcionalno) AWS S3 bucket i Resend API ključ
+- MySQL 8 (the `booking_db` database is created automatically)
+- (optional) an AWS S3 bucket and a Resend API key
 
-### 1. Environment varijable
+### 1. Environment variables
 
-U rootu projekta napravi `.env` datoteku:
+Create a `.env` file in the project root:
 
 ```env
 DB_USERNAME=root
 DB_PASSWORD=your_password
 
-JWT_SECRET=neki-dugi-random-secret-min-32-znaka
+JWT_SECRET=a-long-random-secret-at-least-32-chars
 APP_BASE_URL=http://localhost:5173
-ADMIN_SECRET=tajni-admin-kljuc
+ADMIN_SECRET=your-admin-key
 
 RESEND_API_KEY=re_xxxxxxxx
-MAIL_FROM_ADDRESS=noreply@tvojadomena.com
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
 
 AWS_ACCESS_KEY_ID=xxxx
 AWS_SECRET_ACCESS_KEY=xxxx
@@ -124,7 +124,7 @@ AWS_S3_REGION=eu-central-1
 ./mvnw spring-boot:run
 ```
 
-Backend radi na `http://localhost:8080`, a Swagger UI na `http://localhost:8080/swagger-ui.html`.
+The backend runs on `http://localhost:8080`, and Swagger UI is at `http://localhost:8080/swagger-ui.html`.
 
 ### 3. Frontend
 
@@ -134,30 +134,30 @@ npm install
 npm run dev
 ```
 
-Frontend radi na `http://localhost:5173`; Vite proxy prosljeđuje `/api` zahtjeve na backend.
+The frontend runs on `http://localhost:5173`; the Vite proxy forwards `/api` requests to the backend.
 
 ---
 
-## 🔌 API pregled
+## 🔌 API overview
 
-| Resurs | Base path |
-|--------|-----------|
-| Autentikacija | `/api/auth` — register, login, verify-email, forgot/reset-password |
-| Saloni | `/api/salons` |
-| Usluge | `/api/salons/{salonId}/services` |
-| Radnici | `/api/salons/{salonId}/workers` |
-| Slike | `/api/salons/{salonId}/images` |
-| Zatvaranja | `/api/salons/{salonId}/closures` |
-| Recenzije | `/api/salons/{salonId}/reviews` |
-| Radno vrijeme | `/api/workers/{workerId}/working-hours` |
-| Iznimke radnog vremena | `/api/workers/{workerId}/working-hours-exceptions` |
-| Rezervacije | `/api/appointments` — slobodni termini, moje rezervacije, reschedule, no-show, analitika |
-| Admin | `/api/admin/salons` — odobravanje salona (header `X-Admin-Secret`) |
+| Resource | Base path |
+|----------|-----------|
+| Auth | `/api/auth`: register, login, verify-email, forgot/reset-password |
+| Salons | `/api/salons` |
+| Services | `/api/salons/{salonId}/services` |
+| Workers | `/api/salons/{salonId}/workers` |
+| Images | `/api/salons/{salonId}/images` |
+| Closures | `/api/salons/{salonId}/closures` |
+| Reviews | `/api/salons/{salonId}/reviews` |
+| Working hours | `/api/workers/{workerId}/working-hours` |
+| Working hours exceptions | `/api/workers/{workerId}/working-hours-exceptions` |
+| Appointments | `/api/appointments`: available slots, my bookings, reschedule, no-show, analytics |
+| Admin | `/api/admin/salons`: salon approval (`X-Admin-Secret` header) |
 
-Kompletna dokumentacija s request/response shemama dostupna je u Swagger UI.
+Full request/response schemas are available in Swagger UI.
 
 ---
 
-## 👤 Autor
+## 👤 Author
 
-**Ivo Munitić** — [@munjanjo](https://github.com/munjanjo)
+**Ivo Munitić** · [@munjanjo](https://github.com/munjanjo)
